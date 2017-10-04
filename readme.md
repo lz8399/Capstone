@@ -5,6 +5,7 @@ We help first-responders best evaluate terrain risks in post-disaster scenarios 
 ## Getting Started
 
 /docs contains documentation for the capstone project.
+
 /src contains the git repos for the firmware (ardupilot) and high level drone software (Mission Planner).
 
 ### Prerequisites
