@@ -1,0 +1,2 @@
+# ignore install directory of pixhawk_toolchain (used to build drone firmware)
+/src/pixhawk_toolchain/*
