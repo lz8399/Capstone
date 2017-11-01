@@ -2,3 +2,5 @@
 /src/pixhawk_toolchain/*
 # ignore pptx formatted weekly status updates
 *.pptx
+# ignore word docs, we only upload pdfs once finalized
+*.docx
