@@ -1,0 +1,6 @@
+[submodule "src/RadioHead"]
+	path = src/RadioHead
+	url = https://github.com/PaulStoffregen/RadioHead
+[submodule "src/Adafruit_GPS"]
+	path = src/Adafruit_GPS
+	url = https://github.com/adafruit/Adafruit_GPS
