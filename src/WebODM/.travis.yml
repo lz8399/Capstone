@@ -1,0 +1,14 @@
+sudo: required
+
+language: python
+python:
+  - "2.7"
+
+services:
+  - docker
+
+install:
+  - docker-compose -f docker-compose.yml -f docker-compose.build.yml up --build -d
+  - sleep 50
+
+script: docker-compose exec webapp /bin/bash -c "/webodm/webodm.sh test"
