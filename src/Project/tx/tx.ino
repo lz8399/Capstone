@@ -36,8 +36,6 @@ RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 /************ General Variable Declaration ***************/
 
 int16_t packetnum = 0;  // packet counter, we increment per xmission
- 
-char radiopacket[64];
 
 #define MainPeriod 1000 // time period to count 
 
@@ -51,9 +49,9 @@ int input = 3;
 int interruptPin = 1;
 int i = 0; //This is my test variable for message transmission
 
+// TODO: eliminate the use of strings in the code
 String cps;
 String message;
-String counts = "CPS: ";
 
 /************ FileI/O Variable Declaration ***************/
 int SDpin = 10;
@@ -62,26 +60,26 @@ File myFile;
 
 void setup() 
 {
+  // Open serial communications
+  Serial.begin(115200);
   if (DEVMODE) {
-    // Open serial communications and wait for port to open
-    Serial.begin(115200);
-    while (!Serial) { delay(1); }
+    while (!Serial) { delay(1); } // wait for port to open
   }
 
   // Setup SD card
-  if (DEVMODE) { Serial.print("Initializing SD card..."); }
+  Serial.print("Initializing SD card...");
   if (!SD.begin(SDpin)) {
-    if (DEVMODE) { Serial.println("FAILED"); }
-    while (1);
+    Serial.println("FAILED");
+    return;
   }
-  Serial.println("DONE");
+  Serial.println("success");
 
   // Setup radio
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
-  if (DEVMODE) { Serial.print("Initializing radio..."); }
+  Serial.print("Initializing radio...");
   // manual reset
   digitalWrite(RFM69_RST, HIGH);
   delay(10);
@@ -90,59 +88,58 @@ void setup()
   
   if (!rf69_manager.init()) {
     Serial.println("FAILED");
-    while (1);
+    return;
   }
-  if (DEVMODE) { Serial.println("DONE"); }
+  Serial.println("success");
 
   if (!rf69.setFrequency(RF69_FREQ)) {
-    if (DEVMODE) { Serial.println("ERROR: setFrequency failed"); }
+    Serial.println("ERROR: setFrequency failed");
   }
 
-  if (!rf69.setTxPower(20)) {
-    if (DEVMODE) { Serial.println("ERROR: setTxPower failed"); }
-  }
+  rf69.setTxPower(20);
 
   uint8_t key[] = { 0x1c, 0xef, 0xb2, 0x33, 0xe9, 0x0b, 0xf2, 0x3c,
                     0xb7, 0xee, 0x23, 0x3f, 0xb0, 0x88, 0xa6, 0xcd };
-  if (!rf69.setEncryptionKey(key)) {
-    if (DEVMODE) { Serial.println("ERROR: setEncryptionKey failed"); }
-  }
+  rf69.setEncryptionKey(key);
 
   // Setup ISR for radiation module
   attachInterrupt(interruptPin, radiationdetect, RISING); 
 }
 
+// Non-stack variables
+uint8_t radiopacket[RH_RF69_MAX_MESSAGE_LEN];
 
 void loop() {
   
-  //(1). Wait in a while loop while we are looking for the next file
+  // 1) Wait in a while loop while we are looking for the next file
+  // TODO: Investigate if this while loop could hog control from the rest of the program
   char fileString[50] = {0};
   sprintf(fileString, "JPEG_%d.JPG", i);
   //should be preset to whatever file we are expecting to start with from the GoPro
-  
+
   myFile = SD.open(fileString);
   while (!myFile){
     myFile = SD.open(fileString);
   }
   
-  //(2). Access and Store the GPS value
+  // 2) TODO: Access and Store the GPS value
 
-  //3. Access and Store the CPS value
-  countsperminute(); //Call function that calculates the number of counts detected
-  Serial.print("\n");
+  // 3) Access and Store the CPS value
+  // TODO: Rewrite this function.
+  countsperminute(); // call function that calculates the number of counts detected
 
-  //(4). Transmit the GPS and CPS values
-  message = counts +  cps; //Message to be transmitted 
+  // 4) Transmit the GPS and CPS values
+  message = cps; // message to be transmitted 
   Serial.println(message);
-  message.toCharArray(radiopacket,64);
+  message.toCharArray(radiopacket,RH_RF69_MAX_MESSAGE_LEN);
   moduletx(); //Transmit
 
-  //5. Read/Transmit the image file in chunks
+  // 5) Read/Transmit the image file in chunks
   if (myFile) {
-    Serial.println("TestText.txt:");//print for local verification
+    Serial.println("TestText.txt:"); // print for local verification
 
-    int val1 = myFile.available();//total available bytes in file
-    int val2 = floor(val1/60);//amount of 60 byte packets to process
+    int bytes_available = myFile.available(); // total available bytes in file
+    int num_packets = floor(bytes_available/60); // amount of 60 byte packets to process
     char dataString[60] = {0};
     
     for(int i = 0; i<val2; i++){
@@ -190,6 +187,7 @@ void loop() {
   
 }
 
+/* FUNCTION DISABLED DUE TO NOT BEING USED. SHOULD BE REMOVED IN PRODUCTION 
 void Blink(byte PIN, byte DELAY_MS, byte loops) {
   for (byte i=0; i<loops; i++)  {
     digitalWrite(PIN,HIGH);
@@ -198,32 +196,17 @@ void Blink(byte PIN, byte DELAY_MS, byte loops) {
     delay(DELAY_MS);
   }
 }
+*/
+void TransmitPacket(uint8_t * radiopacket) {
+// Send a single packet
 
-void moduletx() {
-  //Serial.print("Sending "); Serial.println(radiopacket);
-  
-  // Send a message!
-  rf69.send((uint8_t *)radiopacket, strlen(radiopacket));
-  rf69.waitPacketSent();
-
-  // Now wait for a reply
-  uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
-  uint8_t len = sizeof(buf);
-
-  if (rf69.waitAvailableTimeout(100))  { 
-    // Should be a reply message for us now   
-    if (rf69.recv(buf, &len)) {
-      //Serial.print("Got a reply: ");
-      Serial.println((char*)buf);
-      Blink(LED, 20, 3); //blink LED 3 times, 50ms between blinks
-    } else {
-      Serial.println("Receive failed");
-    }
-  } //else {
-    //Serial.println("No reply, is another RFM69 listening?");
-  //}
+  Serial.print("Sending packet. Awaiting acknowledgdement...");
+  if (!rf69_manager.sendtoWait(radiopacket, sizeof(radiopacket), DEST_ADDRESS)) {
+    Serial.println("FAILED");
+    return;
+  }
+  Serial.println("success");
 }
-
 
 void countsperminute() {
  unsigned long currentMillis = millis();
