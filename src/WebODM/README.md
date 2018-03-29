@@ -40,7 +40,7 @@ A free, user-friendly, extendable application and [API](http://docs.webodm.org) 
 ```bash
 git clone https://github.com/OpenDroneMap/WebODM --config core.autocrlf=input
 cd WebODM
-./webodm.sh start
+sudo ./webodm.sh start
 ```
 
 * If you're on Windows find the IP of your Docker machine by running this command from your Docker Quickstart Terminal:
@@ -56,13 +56,13 @@ Linux / Mac, users can connect to 127.0.0.1.
 To stop WebODM press CTRL+C or run:
 
 ```
-./webodm.sh stop
+sudo ./webodm.sh stop
 ```
 
 To update WebODM to the latest version use:
 
 ```bash
-./webodm.sh update
+sudo ./webodm.sh update
 ```
 
 We recommend that you read the [Docker Documentation](https://docs.docker.com/) to familiarize with the application lifecycle, setup and teardown, or for more advanced uses. Look at the contents of the webodm.sh script to understand what commands are used to launch WebODM.
@@ -82,7 +82,7 @@ You **will not be able to distribute a single job across multiple processing nod
 If you want to run WebODM in production, make sure to pass the `--no-debug` flag while starting WebODM:
 
 ```bash
-./webodm.sh down && ./webodm.sh start --no-debug
+sudo ./webodm.sh down && sudo ./webodm.sh start --no-debug
 ```
 
 This will disable the `DEBUG` flag from `webodm/settings.py` within the docker container. This is [really important](https://docs.djangoproject.com/en/1.11/ref/settings/#std:setting-DEBUG).
@@ -96,7 +96,7 @@ WebODM has the ability to automatically request and install a SSL certificate vi
  - Run the following:
 
 ```bash
-./webodm.sh down && ./webodm.sh start --ssl --hostname webodm.myorg.com
+sudo ./webodm.sh down && sudo ./webodm.sh start --ssl --hostname webodm.myorg.com
 ```
 
 That's it! The certificate will automatically renew when needed.
@@ -108,7 +108,7 @@ If you want to specify your own key/certificate pair, simply pass the `--ssl-key
 When using Docker, all processing results are stored in a docker volume and are not available on the host filesystem. If you want to store your files on the host filesystem instead of a docker volume, you need to pass a path via the `--media-dir` option:
 
 ```bash
-./webodm.sh down && ./webodm.sh start --media-dir /home/user/webodm_data
+sudo ./webodm.sh down && sudo ./webodm.sh start --media-dir /home/user/webodm_data
 ```
 
 Note that existing task results will not be available after the change. Refer to the [Migrate Data Volumes](https://docs.docker.com/engine/tutorials/dockervolumes/#backup-restore-or-migrate-data-volumes) section of the Docker documentation for information on migrating existing task results.
@@ -248,7 +248,7 @@ screen -r webodm
 
 WebODM can run natively on Windows, MacOS and Linux.
 
-Ubuntu 16.04 LTS users can refer to [this script](/contrib/ubuntu_1604_install.sh) to install WebODM natively on a new machine.
+Ubuntu 16.04 LTS users can refer to `ubuntu_1604_install.sh` (in root of WebODM) to install WebODM natively on a new machine.
 
 To run WebODM, you will need to install:
  * PostgreSQL (>= 9.5)
