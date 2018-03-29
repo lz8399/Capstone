@@ -1,33 +1,45 @@
+/*
+ * tx.ino
+ * Controls the transmission module for Team Mahogany's Senior Design Project
+ */
+
 #include <SPI.h>
 #include <RH_RF69.h>
+#include <RHReliableDatagram.h>
 #include <SD.h>
 
 /************ Radio Setup ***************/
 
-// Change to 434.0 or other frequency, must match RX's freq!
+// Use 915.0 MHz
 #define RF69_FREQ 915.0
 
-#if defined (__AVR_ATmega328P__)  // Feather 328P w/wing
-  #define RFM69_INT     2  // 
-  #define RFM69_CS      4  //
-  #define RFM69_RST     5  // "A" changed from 2
-  #define LED           13
-#endif
+// Where to send packets to
+#define DEST_ADDRESS   1
+// ...and where to receive them
+#define MY_ADDRESS     2
+
+// Setup RFM69 interface ports
+#define RFM69_INT     2 
+#define RFM69_CS      4
+#define RFM69_RST     5  // changed from 2 in example code
+#define LED           13
+
+// Specify whether or not to print to serial monitor
+#define DEVMODE       1  // change to 0 in production
 
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 
-/************ Radio Setup ***************/
+// Class to manage message delivery and receipt, using the driver declared above
+RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 
 /************ General Variable Declaration ***************/
 
 int16_t packetnum = 0;  // packet counter, we increment per xmission
  
-char radiopacket[64]; 
- 
-//RFM69 radio = RFM69(RFM69_CS, RFM69_IRQ, IS_RFM69HCW, RFM69_IRQN);
+char radiopacket[64];
 
-#define MainPeriod 1000 //Time period to count 
+#define MainPeriod 1000 // time period to count 
 
 long previousMillis = 0; // will store last time of the cycle end
 volatile unsigned long duration=0; // accumulates pulse width
@@ -43,68 +55,61 @@ String cps;
 String message;
 String counts = "CPS: ";
 
-/************ General Variable Declaration ***************/
-
 /************ FileI/O Variable Declaration ***************/
 int SDpin = 10;
 File myFile;
 
-/************ FileI/O Variable Declaration ***************/
 
 void setup() 
 {
-  Serial.begin(115200);
-  // Open serial communications and wait for port to open:
-
-//setup for the SD portion
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+  if (DEVMODE) {
+    // Open serial communications and wait for port to open
+    Serial.begin(115200);
+    while (!Serial) { delay(1); }
   }
-  Serial.print("Initializing SD card...");
+
+  // Setup SD card
+  if (DEVMODE) { Serial.print("Initializing SD card..."); }
   if (!SD.begin(SDpin)) {
-    Serial.println("initialization failed!");
-    return;
+    if (DEVMODE) { Serial.println("FAILED"); }
+    while (1);
   }
-  Serial.println("initialization done.");
-  //Above code is for connection purposes only and has nothing to do with the transmission
-//end setup for SD portion
+  Serial.println("DONE");
 
-//setup for the radio portion
+  // Setup radio
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
+  if (DEVMODE) { Serial.print("Initializing radio..."); }
   // manual reset
   digitalWrite(RFM69_RST, HIGH);
   delay(10);
   digitalWrite(RFM69_RST, LOW);
   delay(10);
   
-  if (!rf69.init()) {
-    Serial.println("RFM69 radio init failed");
+  if (!rf69_manager.init()) {
+    Serial.println("FAILED");
     while (1);
   }
-  Serial.println("RFM69 radio init OK!");
-  // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM (for low power module)
-  // No encryption
+  if (DEVMODE) { Serial.println("DONE"); }
+
   if (!rf69.setFrequency(RF69_FREQ)) {
-    Serial.println("setFrequency failed");
+    if (DEVMODE) { Serial.println("ERROR: setFrequency failed"); }
   }
 
-  // If you are using a high power RF69 eg RFM69HW, you *must* set a Tx power with the
-  // ishighpowermodule flag set like this:
-  rf69.setTxPower(20);  // range from 14-20 for power, 2nd arg must be true for 69HCW
+  if (!rf69.setTxPower(20)) {
+    if (DEVMODE) { Serial.println("ERROR: setTxPower failed"); }
+  }
 
-  // The encryption key has to be the same as the one in the server
-  uint8_t key[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-                    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-  rf69.setEncryptionKey(key);
-  
-  pinMode(LED, OUTPUT);
+  uint8_t key[] = { 0x1c, 0xef, 0xb2, 0x33, 0xe9, 0x0b, 0xf2, 0x3c,
+                    0xb7, 0xee, 0x23, 0x3f, 0xb0, 0x88, 0xa6, 0xcd };
+  if (!rf69.setEncryptionKey(key)) {
+    if (DEVMODE) { Serial.println("ERROR: setEncryptionKey failed"); }
+  }
 
-  Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
-
-  attachInterrupt(interruptPin, radiationdetect,RISING); 
+  // Setup ISR for radiation module
+  attachInterrupt(interruptPin, radiationdetect, RISING); 
 }
 
 
