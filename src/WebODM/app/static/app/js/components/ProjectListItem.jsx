@@ -11,6 +11,8 @@ import Dropzone from '../vendor/dropzone';
 import csrf from '../django/csrf';
 import HistoryNav from '../classes/HistoryNav';
 import PropTypes from 'prop-types';
+import ResizeModes from '../classes/ResizeModes';
+import Gcp from '../classes/Gcp';
 import $ from 'jquery';
 
 class ProjectListItem extends React.Component {
@@ -34,7 +36,6 @@ class ProjectListItem extends React.Component {
     };
 
     this.toggleTaskList = this.toggleTaskList.bind(this);
-    this.handleUpload = this.handleUpload.bind(this);
     this.closeUploadError = this.closeUploadError.bind(this);
     this.cancelUpload = this.cancelUpload.bind(this);
     this.handleTaskSaved = this.handleTaskSaved.bind(this);
@@ -116,6 +117,37 @@ class ProjectListItem extends React.Component {
           
           headers: {
             [csrf.header]: csrf.token
+          },
+
+          transformFile: (file, done) => {
+            // Resize image?
+            if ((this.dz.options.resizeWidth || this.dz.options.resizeHeight) && file.type.match(/image.*/)) {
+              return this.dz.resizeImage(file, this.dz.options.resizeWidth, this.dz.options.resizeHeight, this.dz.options.resizeMethod, done);
+            // Resize GCP? This should always be executed last (we sort in transformstart)
+            } else if (this.dz.options.resizeWidth && file.type.match(/text.*/)){
+              // Read GCP content
+              const fileReader = new FileReader();
+              fileReader.onload = (e) => {
+                const originalGcp = new Gcp(e.target.result);
+                const resizedGcp = originalGcp.resize(this.dz._resizeMap);
+                // Create new GCP file
+                let gcp = new Blob([resizedGcp.toString()], {type: "text/plain"});
+                gcp.lastModifiedDate = file.lastModifiedDate;
+                gcp.lastModified = file.lastModified;
+                gcp.name = file.name;
+                gcp.previewElement = file.previewElement;
+                gcp.previewTemplate = file.previewTemplate;
+                gcp.processing = file.processing;
+                gcp.status = file.status;
+                gcp.upload = file.upload;
+                gcp.upload.total = gcp.size; // not a typo
+                gcp.webkitRelativePath = file.webkitRelativePath;
+                done(gcp);
+              };
+              fileReader.readAsText(file);
+            } else {
+              return done(file);
+            }
           }
       });
 
@@ -127,11 +159,21 @@ class ProjectListItem extends React.Component {
         .on("addedfiles", files => {
           this.setUploadState({
             editing: true,
-            totalCount: files.length
+            totalCount: this.state.upload.totalCount + files.length
           });
         })
-        .on("transformcompleted", (total) => {
+        .on("transformcompleted", (file, total) => {
+          if (this.dz._resizeMap) this.dz._resizeMap[file.name] = this.dz._taskInfo.resizeSize / Math.max(file.width, file.height);
           this.setUploadState({resizedImages: total});
+        })
+        .on("transformstart", (files) => {
+          if (this.dz.options.resizeWidth){
+            // Sort so that a GCP file is always last
+            files.sort(f => f.type.match(/text.*/) ? 1 : -1)
+
+            // Create filename --> resize ratio dict
+            this.dz._resizeMap = {};
+          }
         })
         .on("transformend", () => {
           this.setUploadState({resizing: false, uploading: true});
@@ -168,17 +210,23 @@ class ProjectListItem extends React.Component {
           this.resetUploadState();
         })
         .on("dragenter", () => {
-          if (!this.state.upload.uploading && !this.state.upload.resizing){
+          if (!this.state.upload.editing){
             this.resetUploadState();
           }
         })
         .on("sending", (file, xhr, formData) => {
           const taskInfo = this.dz._taskInfo;
 
-          if (!formData.has("name")) formData.append("name", taskInfo.name);
-          if (!formData.has("options")) formData.append("options", JSON.stringify(taskInfo.options));
-          if (!formData.has("processing_node")) formData.append("processing_node", taskInfo.selectedNode.id);
-          if (!formData.has("auto_processing_node")) formData.append("auto_processing_node", taskInfo.selectedNode.key == "auto");
+          // Safari does not have support for has on FormData
+          // as of December 2017
+          if (!formData.has || !formData.has("name")) formData.append("name", taskInfo.name);
+          if (!formData.has || !formData.has("options")) formData.append("options", JSON.stringify(taskInfo.options));
+          if (!formData.has || !formData.has("processing_node")) formData.append("processing_node", taskInfo.selectedNode.id);
+          if (!formData.has || !formData.has("auto_processing_node")) formData.append("auto_processing_node", taskInfo.selectedNode.key == "auto");
+
+          if (taskInfo.resizeMode === ResizeModes.YES){
+            if (!formData.has || !formData.has("resize_to")) formData.append("resize_to", taskInfo.resizeSize);
+          }
         });
     }
   }
@@ -207,10 +255,6 @@ class ProjectListItem extends React.Component {
     this.dz.removeAllFiles(true);
   }
 
-  handleUpload(){
-    this.resetUploadState();
-  }
-
   taskDeleted(){
     this.refresh();
   }
@@ -228,8 +272,8 @@ class ProjectListItem extends React.Component {
     this.dz._taskInfo = taskInfo; // Allow us to access the task info from dz
 
     // Update dropzone settings
-    if (taskInfo.resizeTo !== null){
-      this.dz.options.resizeWidth = taskInfo.resizeTo;
+    if (taskInfo.resizeMode === ResizeModes.YESINBROWSER){
+      this.dz.options.resizeWidth = taskInfo.resizeSize;
       this.dz.options.resizeQuality = 1.0;
 
       this.setUploadState({resizing: true, editing: false});
@@ -237,7 +281,21 @@ class ProjectListItem extends React.Component {
       this.setUploadState({uploading: true, editing: false});
     }
 
-    this.dz.processQueue();
+    setTimeout(() => {
+      this.dz.processQueue();
+    }, 1);
+  }
+
+  handleTaskCanceled = () => {
+    this.dz.removeAllFiles(true);
+    this.resetUploadState();
+  }
+
+  handleUpload = () => {
+    // Not a second click for adding more files?
+    if (!this.state.upload.editing){
+      this.handleTaskCanceled();
+    }
   }
 
   handleEditProject(){
@@ -291,16 +349,16 @@ class ProjectListItem extends React.Component {
             {this.hasPermission("add") ? 
               <button type="button" 
                       className={"btn btn-primary btn-sm " + (this.state.upload.uploading ? "hide" : "")} 
-                      onClick={this.handleUpload} 
+                      onClick={this.handleUpload}
                       ref={this.setRef("uploadButton")}>
                 <i className="glyphicon glyphicon-upload"></i>
-                Upload Images and GCP
+                Select Images and GCP
               </button>
             : ""}
-              
+
             <button disabled={this.state.upload.error !== ""} 
-                    type="button" 
-                    className={"btn btn-primary btn-sm " + (!this.state.upload.uploading ? "hide" : "")} 
+                    type="button"
+                    className={"btn btn-danger btn-sm " + (!this.state.upload.uploading ? "hide" : "")} 
                     onClick={this.cancelUpload}>
               <i className="glyphicon glyphicon-remove-circle"></i>
               Cancel Upload
@@ -357,6 +415,7 @@ class ProjectListItem extends React.Component {
           {this.state.upload.editing ? 
             <NewTaskPanel
               onSave={this.handleTaskSaved}
+              onCancel={this.handleTaskCanceled}
               filesCount={this.state.upload.totalCount}
               showResize={true}
             />

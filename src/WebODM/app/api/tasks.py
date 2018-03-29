@@ -1,24 +1,20 @@
 import mimetypes
 import os
+from wsgiref.util import FileWrapper
 
-from django.contrib.gis.db.models import GeometryField
-from django.contrib.gis.db.models.functions import Envelope
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation, ValidationError
 from django.db import transaction
-from django.db.models.functions import Cast
 from django.http import HttpResponse
-from wsgiref.util import FileWrapper
 from rest_framework import status, serializers, viewsets, filters, exceptions, permissions, parsers
+from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from rest_framework.decorators import detail_route
 from rest_framework.views import APIView
 
-from nodeodm import status_codes
-from .common import get_and_check_project, get_tile_json, path_traversal_check
-
-from app import models, scheduler, pending_actions
+from app import models, pending_actions
 from nodeodm.models import ProcessingNode
+from worker import tasks as worker_tasks
+from .common import get_and_check_project, get_tile_json, path_traversal_check
 
 
 class TaskIDsSerializer(serializers.BaseSerializer):
@@ -30,9 +26,29 @@ class TaskSerializer(serializers.ModelSerializer):
     project = serializers.PrimaryKeyRelatedField(queryset=models.Project.objects.all())
     processing_node = serializers.PrimaryKeyRelatedField(queryset=ProcessingNode.objects.all()) 
     images_count = serializers.SerializerMethodField()
+    can_rerun_from = serializers.SerializerMethodField()
 
     def get_images_count(self, obj):
         return obj.imageupload_set.count()
+
+    def get_can_rerun_from(self, obj):
+        """
+        When a task has been associated with a processing node
+        and if the processing node supports the "rerun-from" parameter
+        this method returns the valid values for "rerun-from" for that particular
+        processing node.
+
+        TODO: this could be improved by returning an empty array if a task was created
+        and purged by the processing node (which would require knowing how long a task is being kept
+        see https://github.com/OpenDroneMap/node-OpenDroneMap/issues/32
+        :return: array of valid rerun-from parameters
+        """
+        if obj.processing_node is not None:
+            rerun_from_option = list(filter(lambda d: 'name' in d and d['name'] == 'rerun-from', obj.processing_node.available_options))
+            if len(rerun_from_option) > 0 and 'domain' in rerun_from_option[0]:
+                return rerun_from_option[0]['domain']
+
+        return []
 
     class Meta:
         model = models.Task
@@ -64,8 +80,8 @@ class TaskViewSet(viewsets.ViewSet):
         task.last_error = None
         task.save()
 
-        # Call the scheduler (speed things up)
-        scheduler.process_pending_tasks(background=True)
+        # Process task right away
+        worker_tasks.process_task.delay(task.id)
 
         return Response({'success': True})
 
@@ -129,7 +145,8 @@ class TaskViewSet(viewsets.ViewSet):
             raise exceptions.ValidationError(detail="Cannot create task, you need at least 2 images")
 
         with transaction.atomic():
-            task = models.Task.objects.create(project=project)
+            task = models.Task.objects.create(project=project,
+                                              pending_action=pending_actions.RESIZE if 'resize_to' in request.data else None)
 
             for image in files:
                 models.ImageUpload.objects.create(task=task, image=image)
@@ -139,7 +156,9 @@ class TaskViewSet(viewsets.ViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            worker_tasks.process_task.delay(task.id)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
     def update(self, request, pk=None, project_pk=None, partial=False):
@@ -160,8 +179,8 @@ class TaskViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        # Call the scheduler (speed things up)
-        scheduler.process_pending_tasks(background=True)
+        # Process task right away
+        worker_tasks.process_task.delay(task.id)
 
         return Response(serializer.data)
 

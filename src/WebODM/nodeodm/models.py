@@ -11,7 +11,7 @@ from guardian.models import UserObjectPermissionBase
 from .api_client import ApiClient
 import json
 from django.db.models import signals
-from datetime import datetime, timedelta
+from datetime import timedelta
 from .exceptions import ProcessingError, ProcessingTimeout
 import simplejson
 
@@ -177,12 +177,12 @@ class ProcessingNode(models.Model):
             return res
 
     @api
-    def restart_task(self, uuid):
+    def restart_task(self, uuid, options = None):
         """
         Restarts a task that was previously canceled or that had failed to process
         """
         api_client = self.api_client()
-        return self.handle_generic_post_response(api_client.task_restart(uuid))
+        return self.handle_generic_post_response(api_client.task_restart(uuid, options))
 
     @staticmethod
     def handle_generic_post_response(result):
@@ -215,8 +215,8 @@ def auto_update_node_info(sender, instance, created, **kwargs):
             pass
 
 class ProcessingNodeUserObjectPermission(UserObjectPermissionBase):
-    content_object = models.ForeignKey(ProcessingNode)
+    content_object = models.ForeignKey(ProcessingNode, on_delete=models.CASCADE)
 
 
 class ProcessingNodeGroupObjectPermission(GroupObjectPermissionBase):
-    content_object = models.ForeignKey(ProcessingNode)
+    content_object = models.ForeignKey(ProcessingNode, on_delete=models.CASCADE)

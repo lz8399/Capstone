@@ -124,6 +124,9 @@ class TestApi(BootTestCase):
         # images_count field exists
         self.assertTrue(res.data["images_count"] == 0)
 
+        # can_rerun_from field exists, should be an empty list at this point
+        self.assertTrue(len(res.data["can_rerun_from"]) == 0)
+
         # Get console output
         res = client.get('/api/projects/{}/tasks/{}/output/'.format(project.id, task.id))
         self.assertEqual(res.status_code, status.HTTP_200_OK)
@@ -179,14 +182,16 @@ class TestApi(BootTestCase):
         res = client.post('/api/projects/{}/tasks/{}/cancel/'.format(project.id, task.id))
         self.assertTrue(res.data["success"])
         task.refresh_from_db()
-        self.assertTrue(task.last_error is None)
-        self.assertTrue(task.pending_action == pending_actions.CANCEL)
+
+        # Task should have failed to be canceled
+        self.assertTrue("has no processing node or UUID" in task.last_error)
 
         res = client.post('/api/projects/{}/tasks/{}/restart/'.format(project.id, task.id))
         self.assertTrue(res.data["success"])
         task.refresh_from_db()
-        self.assertTrue(task.last_error is None)
-        self.assertTrue(task.pending_action == pending_actions.RESTART)
+
+        # Task should have failed to be restarted
+        self.assertTrue("has no processing node" in task.last_error)
 
         # Cannot cancel, restart or delete a task for which we don't have permission
         for action in ['cancel', 'remove', 'restart']:
@@ -196,10 +201,9 @@ class TestApi(BootTestCase):
         # Can delete
         res = client.post('/api/projects/{}/tasks/{}/remove/'.format(project.id, task.id))
         self.assertTrue(res.data["success"])
-        task.refresh_from_db()
-        self.assertTrue(task.last_error is None)
-        self.assertTrue(task.pending_action == pending_actions.REMOVE)
+        self.assertFalse(Task.objects.filter(id=task.id).exists())
 
+        task = Task.objects.create(project=project)
         temp_project = Project.objects.create(owner=user)
 
         # We have permissions to do anything on a project that we own
@@ -257,7 +261,8 @@ class TestApi(BootTestCase):
                 'status': -99,
                 'last_error': 'yo!',
                 'created_at': 0,
-                'pending_action': 0
+                'pending_action': 0,
+                'can_rerun_from': ['abc']
             }, format='json')
 
         # Operation should fail without errors, but nothing has changed in the DB
@@ -268,6 +273,7 @@ class TestApi(BootTestCase):
         self.assertTrue(task.last_error != 'yo!')
         self.assertTrue(task.created_at != 0)
         self.assertTrue(task.pending_action != 0)
+        self.assertTrue(len(res.data['can_rerun_from']) == 0)
 
     def test_processingnodes(self):
         client = APIClient()

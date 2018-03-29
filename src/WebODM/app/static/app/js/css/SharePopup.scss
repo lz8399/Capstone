@@ -3,7 +3,7 @@
 	display: block;
 
 	&.top{
-		top: -32px;
+		top: -54px;
 	}
 	&.bottom{
 		top: 32px;
@@ -28,6 +28,12 @@
 	.fa-refresh{
 		margin-left: -25px;
 		margin-right: 5px;
+	}
+
+	.btn-qrcode{
+		position: absolute;
+		right: 0px;
+		top: -6px;
 	}
 
 	.share-links{
