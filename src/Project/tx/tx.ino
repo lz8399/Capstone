@@ -7,56 +7,50 @@
 #include <RH_RF69.h>
 #include <RHReliableDatagram.h>
 #include <SD.h>
+#include <Adafruit_GPS.h>
+#include <SoftwareSerial.h>
 
-/************ Radio Setup ***************/
+/************ Constant Definitions ************/
 
-// Use 915.0 MHz
-#define RF69_FREQ 915.0
+#define RF69_FREQ     915.0 // use 915.0 MHz
 
-// Where to send packets to
-#define DEST_ADDRESS   1
-// ...and where to receive them
-#define MY_ADDRESS     2
+#define DEST_ADDRESS  1 // where to send packets to
+#define MY_ADDRESS    2 // ...and where to receive them
 
-// Setup RFM69 interface ports
-#define RFM69_INT     2 
-#define RFM69_CS      4
-#define RFM69_RST     5  // changed from 2 in example code
-#define LED           13
+#define RFM69_INT     2 // RFM69
+#define RFM69_CS      4 // interface
+#define RFM69_RST     5 // ports
 
-// Specify whether or not to print to serial monitor
-#define DEVMODE       1  // change to 0 in production
+#define GPS_TX        8 // GPS interface
+#define GPS_RX        9 // ports
 
-// Singleton instance of the radio driver
-RH_RF69 rf69(RFM69_CS, RFM69_INT);
+#define SD_PIN        10 // SD card module interface port
+
+#define RD_PIN        1   // interrupt pin for radiation detection
+#define RD_PERIOD     5e3 // ms between CPS updates
+#define MINUTE        6e4 // ms
+
+#define DEVMODE       1 // specify whether to wait for serial monitor
+                        // change to 0 in production
+
+/************ Variable Declarations ************/
+
+RH_RF69 rf69(RFM69_CS, RFM69_INT); // radio driver instance
 
 // Class to manage message delivery and receipt, using the driver declared above
 RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 
-/************ General Variable Declaration ***************/
+SoftwareSerial GPSSerial(GPS_RX, GPS_TX); // setup serial port
+Adafruit_GPS GPS(&GPSSerial); // GPS driver instance
 
-int16_t packetnum = 0;  // packet counter, we increment per xmission
+unsigned long previousMillis = 0;     // timestamp
+volatile unsigned int pulseCount = 0; // number of radiation pulses
+unsigned int CPM = 0;                 // most recent CPM value
 
-#define MainPeriod 1000 // time period to count 
-
-long previousMillis = 0; // will store last time of the cycle end
-volatile unsigned long duration=0; // accumulates pulse width
-volatile unsigned long int pulsecount=0;
-volatile unsigned long previousMicros=0;
-int Frequency = 0;
-volatile unsigned long int newcount = 0;
-int input = 3;
-int interruptPin = 1;
-int i = 0; //This is my test variable for message transmission
-
-// TODO: eliminate the use of strings in the code
-String cps;
-String message;
-
-/************ FileI/O Variable Declaration ***************/
-int SDpin = 10;
-File myFile;
-
+File image;
+char radioPacket[RH_RF69_MAX_MESSAGE_LEN];
+unsigned int imageNumber = 1;
+char filename[20];
 
 void setup() 
 {
@@ -66,176 +60,128 @@ void setup()
     while (!Serial) { delay(1); } // wait for port to open
   }
 
-  // Setup SD card
-  Serial.print("Initializing SD card...");
-  if (!SD.begin(SDpin)) {
+  // Setup GPS
+  Serial.print("Initializing GPS...");
+  GPS.begin(9600);
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  GPS.standby();
+  if (!GPS.wakeup()) {
     Serial.println("FAILED");
     return;
   }
   Serial.println("success");
 
-  // Setup radio
-  pinMode(LED, OUTPUT);     
+  // Setup SD card
+  Serial.print("Initializing SD card...");
+  if (!SD.begin(SD_PIN)) {
+    Serial.println("FAILED");
+    return;
+  }
+  Serial.println("success");
+
+  // Setup radio pins
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
-
+  
   Serial.print("Initializing radio...");
-  // manual reset
+  // Manually reset, then initialize
   digitalWrite(RFM69_RST, HIGH);
   delay(10);
   digitalWrite(RFM69_RST, LOW);
   delay(10);
-  
   if (!rf69_manager.init()) {
     Serial.println("FAILED");
     return;
   }
   Serial.println("success");
 
+  // Set frequency, power, and AES key of radio
   if (!rf69.setFrequency(RF69_FREQ)) {
     Serial.println("ERROR: setFrequency failed");
   }
-
   rf69.setTxPower(20);
-
   uint8_t key[] = { 0x1c, 0xef, 0xb2, 0x33, 0xe9, 0x0b, 0xf2, 0x3c,
                     0xb7, 0xee, 0x23, 0x3f, 0xb0, 0x88, 0xa6, 0xcd };
   rf69.setEncryptionKey(key);
 
   // Setup ISR for radiation module
-  attachInterrupt(interruptPin, radiationdetect, RISING); 
-}
+  attachInterrupt(RD_PIN, RadDetect, RISING);
 
-// Non-stack variables
-uint8_t radiopacket[RH_RF69_MAX_MESSAGE_LEN];
+  UpdateCPM();
+  UpdateGPS(); 
+}
 
 void loop() {
-  
-  // 1) Wait in a while loop while we are looking for the next file
-  // TODO: Investigate if this while loop could hog control from the rest of the program
-  char fileString[50] = {0};
-  sprintf(fileString, "JPEG_%d.JPG", i);
-  //should be preset to whatever file we are expecting to start with from the GoPro
 
-  myFile = SD.open(fileString);
-  while (!myFile){
-    myFile = SD.open(fileString);
-  }
-  
-  // 2) TODO: Access and Store the GPS value
+  // Attempt to open the image file
+  sprintf(filename, "JPEG_%d.JPG", imageNumber);
+  image = SD.open(filename);
 
-  // 3) Access and Store the CPS value
-  // TODO: Rewrite this function.
-  countsperminute(); // call function that calculates the number of counts detected
-
-  // 4) Transmit the GPS and CPS values
-  message = cps; // message to be transmitted 
-  Serial.println(message);
-  message.toCharArray(radiopacket,RH_RF69_MAX_MESSAGE_LEN);
-  moduletx(); //Transmit
-
-  // 5) Read/Transmit the image file in chunks
-  if (myFile) {
-    Serial.println("TestText.txt:"); // print for local verification
-
-    int bytes_available = myFile.available(); // total available bytes in file
-    int num_packets = floor(bytes_available/60); // amount of 60 byte packets to process
-    char dataString[60] = {0};
-    
-    for(int i = 0; i<val2; i++){
-      byte imagePacket[60] = {0};
-      myFile.read(imagePacket,60);
-      String packet1;
-      for (int j=0; j <= 59 ; j++){
-          sprintf(dataString,"%02X",imagePacket[j]);
-          String myString = String(dataString);
-          packet1 = packet1+myString;
-      }
-      Serial.print(packet1);
-      message = packet1;
-      message.toCharArray(radiopacket,64);
-      moduletx();
-    }
-    
-    int val3 = val1-(val2*60);
-    char dataString2[val3] = {0};
-    
-    byte imagePacket2[val3] = {0};
-    myFile.read(imagePacket2,val3);
-    String packet1;
-    for (int j=0; j < val3 ; j++){
-      sprintf(dataString2,"%02X",imagePacket2[j]);
-      String myString = String(dataString2);
-      packet1 = packet1+myString;
-    }
-    Serial.print(packet1);
-    message = packet1;
-    message.toCharArray(radiopacket,64);
-    moduletx();
-   
-    myFile.close();
-
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
+  // If successful, transmit the data and close the file
+  if (image) {
+    TransmitData();
+    image.close();
   }
 
-
-  //6. Final Steps
-  //delay(1000); //Time to sleep
-  i = i + 1;
-  
+  UpdateCPM();
+  UpdateGPS();
 }
 
-/* FUNCTION DISABLED DUE TO NOT BEING USED. SHOULD BE REMOVED IN PRODUCTION 
-void Blink(byte PIN, byte DELAY_MS, byte loops) {
-  for (byte i=0; i<loops; i++)  {
-    digitalWrite(PIN,HIGH);
-    delay(DELAY_MS);
-    digitalWrite(PIN,LOW);
-    delay(DELAY_MS);
+void TransmitData() {
+// Send all the data, including the CPM, GPS, and image
+
+  Serial.print("Transmitting ");
+  Serial.println(filename);
+
+  // Send the CPM and GPS coordinates
+  sprintf(radioPacket, "Location: %f,%f\nCPM: %u", GPS.latitude, GPS.longitude, CPM);
+  TransmitPacket();
+
+  // Now send the image
+  int numPackets = ceil(image.available()/RH_RF69_MAX_MESSAGE_LEN);
+  for (int i = 0; i<numPackets; i++) {
+    image.read(radioPacket,RH_RF69_MAX_MESSAGE_LEN);
+    TransmitPacket();
   }
 }
-*/
-void TransmitPacket(uint8_t * radiopacket) {
+
+void TransmitPacket() {
 // Send a single packet
 
-  Serial.print("Sending packet. Awaiting acknowledgdement...");
-  if (!rf69_manager.sendtoWait(radiopacket, sizeof(radiopacket), DEST_ADDRESS)) {
+  Serial.println("Sending packet:");
+  Serial.println(radioPacket);
+  Serial.print("Awaiting acknowledgdement...");
+  if (!rf69_manager.sendtoWait((uint8_t *)radioPacket, strlen(radioPacket), DEST_ADDRESS)) {
     Serial.println("FAILED");
     return;
   }
   Serial.println("success");
 }
 
-void countsperminute() {
- unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= MainPeriod) 
-    { 
-      previousMillis = currentMillis;   
-      // need to bufferize to avoid glitches
-      unsigned long _duration = duration;
-      unsigned long _pulsecount = pulsecount;
-      newcount = pulsecount;
-      duration = 0; // clear counters
-      pulsecount = 0; //initialize count
-      float Freq = 1e6 / float(_duration);    //Duration is in uSecond so it is 1e6 / T (You could also check the pulsein arduino function)
+void UpdateGPS() {
+// Update the GPS coordinates if a new sentence is received
 
-      Freq *= _pulsecount; // calculate F
-      Frequency = int(Freq); //Ensure the output produced in an integer
-      if(Frequency <= 0) Frequency = 0;
-      if(Frequency != 0) Frequency = Frequency + 1; //Make up for any initial delays by adding a 1 to count
-      cps = String(newcount);
-      //Serial.print("Counts/s: ");
-      //Serial.print(cpm);
-    }
-    //delay(10);
+  GPS.read();
+  if (GPS.newNMEAreceived()) {
+    GPS.parse(GPS.lastNMEA());
+  }
 }
 
-void radiationdetect() // interrupt handler for detecting counting number of completed cycles edge
-{
-  unsigned long currentMicros = micros();
-  duration += currentMicros - previousMicros;
-  previousMicros = currentMicros;
-  pulsecount++;
+void UpdateCPM() {
+// Update the CPM and reset pulsecount if period has been reached
+
+  unsigned long currentMillis = millis();
+  unsigned long interval = currentMillis - previousMillis;
+  if (interval >= RD_PERIOD) {
+    CPM = pulseCount * (MINUTE / (int)interval);
+    pulseCount = 0;
+  }
+  previousMillis = currentMillis;  
+}
+
+void RadDetect() {
+// ISR called when radiation is detetected; counts number of pulses
+
+  pulseCount++;
 }
