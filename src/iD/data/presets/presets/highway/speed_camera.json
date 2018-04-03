@@ -1,0 +1,17 @@
+{
+    "icon": "attraction",
+    "geometry": [
+        "point",
+        "vertex"
+    ],
+    "fields": [
+        "direction",
+        "ref"
+     ],
+    "tags": {
+        "highway": "speed_camera"
+    },
+    "terms": [
+    ],
+    "name": "Speed Camera"
+}

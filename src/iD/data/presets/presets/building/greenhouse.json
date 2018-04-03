@@ -1,0 +1,17 @@
+{
+    "icon": "garden-center",
+    "fields": [
+        "name",
+        "address",
+        "levels",
+        "height"
+    ],
+    "geometry": [
+        "area"
+    ],
+    "tags": {
+        "building": "greenhouse"
+    },
+    "matchScore": 0.5,
+    "name": "Greenhouse"
+}

@@ -1,0 +1,16 @@
+{
+    "icon": "car",
+    "fields": [
+        "name",
+        "operator",
+        "payment_multi"
+    ],
+    "geometry": [
+        "point",
+        "area"
+    ],
+    "tags": {
+        "amenity": "car_rental"
+    },
+    "name": "Car Rental"
+}

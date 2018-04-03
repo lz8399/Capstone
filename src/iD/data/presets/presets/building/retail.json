@@ -1,0 +1,18 @@
+{
+    "icon": "commercial",
+    "fields": [
+        "name",
+        "address",
+        "levels",
+        "height",
+        "smoking"
+    ],
+    "geometry": [
+        "area"
+    ],
+    "tags": {
+        "building": "retail"
+    },
+    "matchScore": 0.5,
+    "name": "Retail Building"
+}
