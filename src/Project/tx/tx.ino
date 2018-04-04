@@ -8,7 +8,6 @@
 #include <RHReliableDatagram.h>
 #include <SD.h>
 #include <Adafruit_GPS.h>
-#include <SoftwareSerial.h>
 
 /************ Constant Definitions ************/
 
@@ -21,10 +20,10 @@
 #define RFM69_CS      4 // interface
 #define RFM69_RST     5 // ports
 
-#define GPS_TX        8 // GPS interface
-#define GPS_RX        9 // ports
+#define GPS_SERIAL    Serial1
 
-#define SD_PIN        10 // SD card module interface port
+#define SD_CS         10 // SD card module
+#define SD_CD         9  // interface ports
 
 #define RD_PIN        1   // interrupt pin for radiation detection
 #define RD_PERIOD     5e3 // ms between CPS updates
@@ -40,8 +39,7 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT); // radio driver instance
 // Class to manage message delivery and receipt, using the driver declared above
 RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 
-SoftwareSerial GPSSerial(GPS_RX, GPS_TX); // setup serial port
-Adafruit_GPS GPS(&GPSSerial); // GPS driver instance
+Adafruit_GPS GPS(&GPS_SERIAL); // GPS driver instance
 
 unsigned long previousMillis = 0;     // timestamp
 volatile unsigned int pulseCount = 0; // number of radiation pulses
@@ -60,30 +58,35 @@ void setup()
     while (!Serial) { delay(1); } // wait for port to open
   }
 
+  // Setup pins
+  pinMode(RFM69_RST, OUTPUT);
+  digitalWrite(RFM69_RST, LOW);
+  pinMode(SD_CD, INPUT);
+
   // Setup GPS
   Serial.print("Initializing GPS...");
   GPS.begin(9600);
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  /*
   GPS.standby();
+  Serial.print("standing by...");
   if (!GPS.wakeup()) {
-    Serial.println("FAILED");
-    return;
-  }
+    Serial.println("ERROR: GPS module is not responding");
+  }*/
   Serial.println("success");
 
   // Setup SD card
   Serial.print("Initializing SD card...");
-  if (!SD.begin(SD_PIN)) {
-    Serial.println("FAILED");
-    return;
+  if (!digitalRead(SD_CD)) {
+    Serial.println("ERROR: No card detected");
+  } else if (!SD.begin(SD_CS)) {
+    Serial.println("ERROR: Could not initialize");
+  } else {
+    Serial.println("success");
   }
-  Serial.println("success");
 
-  // Setup radio pins
-  pinMode(RFM69_RST, OUTPUT);
-  digitalWrite(RFM69_RST, LOW);
-  
+  // Setup radio
   Serial.print("Initializing radio...");
   // Manually reset, then initialize
   digitalWrite(RFM69_RST, HIGH);
@@ -91,20 +94,18 @@ void setup()
   digitalWrite(RFM69_RST, LOW);
   delay(10);
   if (!rf69_manager.init()) {
-    Serial.println("FAILED");
-    return;
-  }
-  Serial.println("success");
-
-  // Set frequency, power, and AES key of radio
-  if (!rf69.setFrequency(RF69_FREQ)) {
+    Serial.println("ERROR: Could not initialize");
+  } else if (!rf69.setFrequency(RF69_FREQ)) {
     Serial.println("ERROR: setFrequency failed");
+  } else {
+    // Set power and AES key of radio
+    rf69.setTxPower(20);
+    uint8_t key[] = { 0x1c, 0xef, 0xb2, 0x33, 0xe9, 0x0b, 0xf2, 0x3c,
+                      0xb7, 0xee, 0x23, 0x3f, 0xb0, 0x88, 0xa6, 0xcd };
+    rf69.setEncryptionKey(key);
+    Serial.println("success");
   }
-  rf69.setTxPower(20);
-  uint8_t key[] = { 0x1c, 0xef, 0xb2, 0x33, 0xe9, 0x0b, 0xf2, 0x3c,
-                    0xb7, 0xee, 0x23, 0x3f, 0xb0, 0x88, 0xa6, 0xcd };
-  rf69.setEncryptionKey(key);
-
+  
   // Setup ISR for radiation module
   attachInterrupt(RD_PIN, RadDetect, RISING);
 
@@ -126,6 +127,11 @@ void loop() {
 
   UpdateCPM();
   UpdateGPS();
+
+  // DEBUG
+  delay(1000);
+  sprintf(radioPacket, "Location: %f,%f\nCPM: %u", GPS.latitude, GPS.longitude, CPM);
+  TransmitPacket();
 }
 
 void TransmitData() {
