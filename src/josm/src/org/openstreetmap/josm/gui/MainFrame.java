@@ -158,7 +158,7 @@ public class MainFrame extends JFrame {
         OsmDataLayer editLayer = MainApplication.getLayerManager().getEditLayer();
         boolean dirty = editLayer != null && (editLayer.requiresSaveToFile()
                 || (editLayer.requiresUploadToServer() && !editLayer.isUploadDiscouraged()));
-        setTitle((dirty ? "* " : "") + tr("Java OpenStreetMap Editor"));
+        setTitle((dirty ? "* " : "") + tr("Java OpenStreetMap - Tufts University - Team Mahogany"));
         getRootPane().putClientProperty("Window.documentModified", dirty);
     }
 

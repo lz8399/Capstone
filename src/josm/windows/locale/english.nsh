@@ -10,7 +10,7 @@
 ; Make sure to update the JOSM_MACRO_LANGUAGEFILE_END macro in
 ; langmacros.nsh when updating this file
 
-!insertmacro JOSM_MACRO_DEFAULT_STRING JOSM_WELCOME_TEXT "This wizard will guide you through the installation of the Java OpenStreetMap Editor (JOSM).$\r$\n$\r$\nBefore starting the installation, make sure any JOSM applications are not running.$\r$\n$\r$\nClick 'Next' to continue."
+!insertmacro JOSM_MACRO_DEFAULT_STRING JOSM_WELCOME_TEXT "This wizard will guide you through the installation of the Java OpenStreetMap - Tufts University - Team Mahogany (JOSM).$\r$\n$\r$\nBefore starting the installation, make sure any JOSM applications are not running.$\r$\n$\r$\nClick 'Next' to continue."
 !insertmacro JOSM_MACRO_DEFAULT_STRING JOSM_DIR_TEXT "Choose a directory in which to install JOSM."
 
 !insertmacro JOSM_MACRO_DEFAULT_STRING JOSM_FULL_INSTALL "JOSM (full install)"

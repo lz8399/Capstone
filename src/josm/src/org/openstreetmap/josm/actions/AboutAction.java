@@ -82,7 +82,7 @@ public final class AboutAction extends JosmAction {
 
         JPanel info = new JPanel(new GridBagLayout());
         final JMultilineLabel label = new JMultilineLabel("<html>" +
-                "<h1>" + "JOSM – " + tr("Java OpenStreetMap Editor") + "</h1>" +
+                "<h1>" + "JOSM – " + tr("Java OpenStreetMap - Tufts University - Team Mahogany") + "</h1>" +
                 "<p style='font-size:75%'></p>" +
                 "<p>" + tr("Version {0}", version.getVersionString()) + "</p>" +
                 "<p style='font-size:50%'></p>" +

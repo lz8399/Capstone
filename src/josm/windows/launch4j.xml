@@ -23,7 +23,7 @@
   <versionInfo>
     <fileVersion>1.5.0.%VERSION%</fileVersion>
     <txtFileVersion>%VERSION%</txtFileVersion>
-    <fileDescription>Java OpenStreetMap Editor</fileDescription>
+    <fileDescription>Java OpenStreetMap - Tufts University - Team Mahogany</fileDescription>
     <copyright>GNU General Public License v2 or later</copyright>
     <productVersion>1.5.0.%VERSION%</productVersion>
     <txtProductVersion>%VERSION%</txtProductVersion>

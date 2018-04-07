@@ -770,7 +770,7 @@ public class MainApplication extends Main {
     }
 
     static String getHelp() {
-        return tr("Java OpenStreetMap Editor")+" ["
+        return tr("Java OpenStreetMap - Tufts University - Team Mahogany")+" ["
                 +Version.getInstance().getAgentString()+"]\n\n"+
                 tr("usage")+":\n"+
                 "\tjava -jar josm.jar [<command>] <options>...\n\n"+

@@ -2,7 +2,7 @@
 Type=Application
 Version=1.0
 Name=JOSM (latest snapshot)
-GenericName=Java OpenStreetMap Editor (latest)
+GenericName=Java OpenStreetMap - Tufts University - Team Mahogany (latest)
 Comment=Extensible off-line editor for OpenStreetMap (OSM)
 Icon=josm-latest
 Exec=josm-latest %F

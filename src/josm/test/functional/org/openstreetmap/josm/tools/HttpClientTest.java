@@ -127,7 +127,7 @@ public class HttpClientTest {
 
     @Test
     public void testPost() throws IOException {
-        final String text = "Hello World!\nGeetings from JOSM, the Java OpenStreetMap Editor";
+        final String text = "Hello World!\nGeetings from JOSM, the Java OpenStreetMap - Tufts University - Team Mahogany";
         final HttpClient.Response response = HttpClient.create(new URL("https://httpbin.org/post"), "POST")
                 .setHeader("Content-Type", "text/plain")
                 .setRequestBody(text.getBytes(StandardCharsets.UTF_8))

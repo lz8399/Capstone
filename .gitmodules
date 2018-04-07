@@ -4,6 +4,3 @@
 [submodule "src/Adafruit_GPS"]
 	path = src/Adafruit_GPS
 	url = https://github.com/adafruit/Adafruit_GPS
-[submodule "src/josm"]
-	path = src/josm
-	url = https://github.com/openstreetmap/josm.git

@@ -101,11 +101,6 @@ public class ImageryLayerInfo {
                         MainApplication.getLayerManager().addLayer(ImageryLayer.create(i));
                     }
 
-                    // Then we need to move to the proper GPS location
-
-
-                    // Move to the proper zoom level
-
                 } catch (IllegalArgumentException e) {
                     Logging.warn("Unable to load imagery preference entry:"+e);
                 }

@@ -5,7 +5,7 @@
         <title>JOSM (development version)</title>
         <vendor>OpenStreetMap</vendor> 
         <homepage href="https://josm.openstreetmap.de"/> 
-        <description>Java OpenStreetMap editor</description>
+        <description>Java OpenStreetMap - Tufts University - Team Mahogany</description>
         <description kind="one-line">JOSM</description>
         <description kind="tooltip">JOSM</description>
         <icon href="https://josm.openstreetmap.de/logo.png"/> 
