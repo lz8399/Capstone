@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="fest">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/test/lib/fest/MRJToolkitStubs-1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/test/lib/fest/fest-swing-1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/test/lib/fest/debug-1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/test/lib/fest/fest-reflect-1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/test/lib/fest/jcip-annotations-1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/test/lib/fest/fest-assert-1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/test/lib/fest/fest-util-1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

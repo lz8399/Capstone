@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="data.osm">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/test/data/regress/9632/data.osm.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
