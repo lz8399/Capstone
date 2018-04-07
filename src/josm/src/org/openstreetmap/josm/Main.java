@@ -171,6 +171,9 @@ public abstract class Main {
 
         // Initializes tasks that must be run after parallel tasks
         runInitializationTasks(afterInitializationTasks());
+
+        // Runs Tufts Team Mahogany specific code
+        DisasterResponse.Initialize();
     }
 
     private static void runInitializationTasks(List<InitializationTask> tasks) {
