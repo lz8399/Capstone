@@ -8,6 +8,7 @@
 #include <RHReliableDatagram.h>
 #include <SD.h>
 #include <Adafruit_GPS.h>
+// #include <SoftwareSerial.h> // required when using the pro mini
 
 /************ Constant Definitions ************/
 
@@ -19,8 +20,11 @@
 #define RFM69_INT     2 // RFM69
 #define RFM69_CS      4 // interface
 #define RFM69_RST     5 // ports
-
-#define GPS_SERIAL    Serial1
+/*
+#define GPS_TX        6 // GPS interface
+#define GPS_RX        7 // ports
+*/
+#define GPSSerial Serial1 // remove when using the pro mini
 
 #define SD_CS         10 // SD card module
 #define SD_CD         9  // interface ports
@@ -29,33 +33,47 @@
 #define RD_PERIOD     5e3 // ms between CPS updates
 #define MINUTE        6e4 // ms
 
-#define DEVMODE       1 // specify whether to wait for serial monitor
-                        // change to 0 in production
+#define GPSECHO       true  // specify whether to echo the GPS data to console
+                            // change to false in production
+
+#define WAITSER       true  // specify whether to wait for serial monitor
+                            // change to false in production
 
 /************ Variable Declarations ************/
+
+// SoftwareSerial GPSSerial(GPS_RX,GPS_TX); // required when using the pro mini
 
 RH_RF69 rf69(RFM69_CS, RFM69_INT); // radio driver instance
 
 // Class to manage message delivery and receipt, using the driver declared above
 RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 
-Adafruit_GPS GPS(&GPS_SERIAL); // GPS driver instance
+Adafruit_GPS GPS(&GPSSerial); // GPS driver instance
+char lat[11] = "";        // store
+char lon[11] = "";        // GPS
+char timestamp[22] = "";  // data
+char altitude[10] = "";   // strings
 
-unsigned long previousMillis = 0;     // timestamp
+unsigned long previousMillis = 0; // timestamp
 volatile unsigned int pulseCount = 0; // number of radiation pulses
-unsigned int CPM = 0;                 // most recent CPM value
+unsigned int CPM = 0; // most recent CPM value
 
-File image;
-char radioPacket[RH_RF69_MAX_MESSAGE_LEN];
-unsigned int imageNumber = 1;
-char filename[20];
+File image;                     // SD
+unsigned int imageNumber = 1;   // card
+char filename[20];              // stuff
+
+char radioPacket[RH_RF69_MAX_MESSAGE_LEN]; // single packet for transmission
+
+void EnableTimerInterrupt(); // function prototype
+
+/************ Initialization Routine ************/
 
 void setup() 
 {
   // Open serial communications
   Serial.begin(115200);
-  if (DEVMODE) {
-    while (!Serial) { delay(1); } // wait for port to open
+  if (WAITSER) {
+    while (!Serial) {} // wait for port to open
   }
 
   // Setup pins
@@ -64,18 +82,11 @@ void setup()
   pinMode(SD_CD, INPUT);
 
   // Setup GPS
-  Serial.print("Initializing GPS...");
   GPS.begin(9600);
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
-  /*
-  GPS.standby();
-  Serial.print("standing by...");
-  if (!GPS.wakeup()) {
-    Serial.println("ERROR: GPS module is not responding");
-  }*/
-  Serial.println("success");
-
+  EnableTimerInterrupt();
+  
   // Setup SD card
   Serial.print("Initializing SD card...");
   if (!digitalRead(SD_CD)) {
@@ -113,6 +124,8 @@ void setup()
   UpdateGPS(); 
 }
 
+/************ Main Loop ************/
+
 void loop() {
 
   // Attempt to open the image file
@@ -127,21 +140,33 @@ void loop() {
 
   UpdateCPM();
   UpdateGPS();
+}
 
-  // DEBUG
-  delay(1000);
-  sprintf(radioPacket, "Location: %f,%f\nCPM: %u", GPS.latitude, GPS.longitude, CPM);
-  TransmitPacket();
+/************ Function Definitions ************/
+
+SIGNAL(TIMER0_COMPA_vect) {
+// Look for any new GPS data and store it once a millisecond
+  char c = GPS.read();
+
+#ifdef UDR0
+  if (GPSECHO) // print out the data if desired
+    if (c) UDR0 = c;  
+#endif
+}
+
+void EnableTimerInterrupt() {
+// Sets up the TIMER0_COMPA_vect interrupt to trigger once every ms
+  OCR0A = 0xAF;
+  TIMSK0 |= _BV(OCIE0A);
 }
 
 void TransmitData() {
 // Send all the data, including the CPM, GPS, and image
-
   Serial.print("Transmitting ");
   Serial.println(filename);
 
   // Send the CPM and GPS coordinates
-  sprintf(radioPacket, "Location: %f,%f\nCPM: %u", GPS.latitude, GPS.longitude, CPM);
+  sprintf(radioPacket, "Timestamp: %s\nLocation: %s,%s\nAltitude: %s\nCPM: %u", timestamp,lat,lon,altitude,CPM);
   TransmitPacket();
 
   // Now send the image
@@ -154,7 +179,6 @@ void TransmitData() {
 
 void TransmitPacket() {
 // Send a single packet
-
   Serial.println("Sending packet:");
   Serial.println(radioPacket);
   Serial.print("Awaiting acknowledgdement...");
@@ -165,18 +189,32 @@ void TransmitPacket() {
   Serial.println("success");
 }
 
-void UpdateGPS() {
+bool UpdateGPS() {
 // Update the GPS coordinates if a new sentence is received
-
-  GPS.read();
+// Returns true if updated, false if not
   if (GPS.newNMEAreceived()) {
-    GPS.parse(GPS.lastNMEA());
+    if (!GPS.parse(GPS.lastNMEA())) return false;
   }
+  if (!GPS.fix) {
+    return false;
+  }
+
+  // values have been updated; prepare them for transmission
+  dtostrf(GPS.latitude,9,4,lat);
+  lat[9] = GPS.lat;
+  lat[10] = 0;
+  dtostrf(GPS.longitude,9,4,lon);
+  lon[9] = GPS.lon;
+  lon[10] = 0;
+  
+  dtostrf(GPS.altitude,9,2,altitude);
+
+  // date in dd/mm/yyyy format
+  sprintf(timestamp, "%d/%d/20%d %d:%d:%d.%d", GPS.day,GPS.month,GPS.year,GPS.hour,GPS.minute,GPS.seconds,GPS.milliseconds);
 }
 
 void UpdateCPM() {
 // Update the CPM and reset pulsecount if period has been reached
-
   unsigned long currentMillis = millis();
   unsigned long interval = currentMillis - previousMillis;
   if (interval >= RD_PERIOD) {
@@ -188,6 +226,5 @@ void UpdateCPM() {
 
 void RadDetect() {
 // ISR called when radiation is detetected; counts number of pulses
-
   pulseCount++;
 }
