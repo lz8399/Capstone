@@ -102,27 +102,18 @@ public class DisasterResponse {
 //            }
 //        }
 
-
-
         OsmDataLayer layer = new OsmDataLayer(dataSet, "Custom Layer", null);
         //MainApplication.getLayerManager().addLayer(layer);
 
-//        public GeoImageLayer(final List<ImageEntry> data, GpxLayer gpxLayer, final String name) {
-//            this(data, gpxLayer, name, false);
-//        }
-
-        //List<ImageEntry> data;
-        //GpxLayer gpxLayer;
-        //GeoImageLayer geoImageLayer = new GeoImageLayer(data, gpxLayer, "Custo Layer");
-
         JpgImporter importer = new JpgImporter();
         Component parent = MainApplication.parent;
+
         String title = "Title";
         ProgressMonitor progressMonitor = new PleaseWaitProgressMonitor(parent, title);
         ArrayList<File> files = new ArrayList<>();
-        files.add(new File("C:\\Users\\Kevin\\git\\Capstone\\sample_data"));   //  \\DJI_0176.JPG"));
+        files.add(new File("C:\\Users\\Kevin\\git\\Capstone\\sample_data"));
         try {
-            importer.importData(files, progressMonitor);
+            importer.importData(files);
         } catch (Exception ex) {
         }
 

@@ -87,6 +87,17 @@ public class JpgImporter extends FileImporter {
         }
     }
 
+    public void importData(List<File> sel) throws IOException, IllegalDataException {
+        List<File> files = new ArrayList<>();
+        Set<String> visitedDirs = new HashSet<>();
+        addRecursiveFiles(files, visitedDirs, sel);
+
+        if (files.isEmpty())
+            throw new IOException(tr("No image files found."));
+
+        GeoImageLayer.create(files, gpx);
+    }
+
     static void addRecursiveFiles(List<File> files, Set<String> visitedDirs, List<File> sel, ProgressMonitor progressMonitor)
             throws IOException {
 
@@ -115,6 +126,26 @@ public class JpgImporter extends FileImporter {
         } finally {
             progressMonitor.finishTask();
         }
+    }
+
+    static void addRecursiveFiles(List<File> files, Set<String> visitedDirs, List<File> sel)
+            throws IOException {
+
+        for (File f : sel) {
+            if (f.isDirectory()) {
+                if (visitedDirs.add(f.getCanonicalPath())) { // Do not loop over symlinks
+                    File[] dirFiles = f.listFiles(); // Can be null for some strange directories (like lost+found)
+                    if (dirFiles != null) {
+                        addRecursiveFiles(files, visitedDirs, Arrays.asList(dirFiles));
+                    }
+                }
+            } else {
+                if (FILE_FILTER.accept(f)) {
+                    files.add(f);
+                }
+            }
+        }
+
     }
 
     @Override
