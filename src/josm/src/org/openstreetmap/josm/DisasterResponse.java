@@ -1,5 +1,6 @@
 package org.openstreetmap.josm;
 
+import org.openstreetmap.josm.actions.MergeLayerAction;
 import org.openstreetmap.josm.data.StructUtils;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
@@ -109,13 +110,24 @@ public class DisasterResponse {
         Component parent = MainApplication.parent;
 
         String title = "Title";
-        ProgressMonitor progressMonitor = new PleaseWaitProgressMonitor(parent, title);
+        //ProgressMonitor progressMonitor = new PleaseWaitProgressMonitor(parent, title);
         ArrayList<File> files = new ArrayList<>();
         files.add(new File("C:\\Users\\Kevin\\git\\Capstone\\sample_data"));
         try {
             importer.importData(files);
         } catch (Exception ex) {
         }
+
+        // create a sample data two, then merge the second layer so we can constantly add to the first layer
+
+        ArrayList<File> files2 = new ArrayList<>();
+        files2.add(new File("C:\\Users\\Kevin\\git\\Capstone\\sample_data2"));
+        try {
+            importer.importData(files2);
+        } catch (Exception ex) {
+        }
+
+        MergeLayerAction merge = new MergeLayerAction();
 
 
         //MainApplication.getMap().mapView.getLayerManager().addLayer(geoImageLayer);
