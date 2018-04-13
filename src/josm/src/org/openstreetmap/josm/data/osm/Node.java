@@ -23,7 +23,7 @@ import org.openstreetmap.josm.tools.Utils;
  *
  * @author imi
  */
-public final class Node extends OsmPrimitive implements INode {
+public class Node extends OsmPrimitive implements INode {
 
     /*
      * We "inline" lat/lon rather than using a LatLon-object => reduces memory footprint
