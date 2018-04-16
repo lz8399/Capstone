@@ -6,6 +6,7 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -75,6 +76,40 @@ public class MergeLayerAction extends AbstractMergeAction {
     }
 
     /**
+     * Submits merge of layers.
+     * @param targetLayer target layers
+     * @param sourceLayers source layers
+     * @return a Future representing pending completion of the merge task, or {@code null}
+     * @since 11885 (return type)
+     */
+    protected Future<?> doMerge(Layer targetLayer, final Collection<Layer> sourceLayers) {
+        if (targetLayer == null)
+            return null;
+        final Object actionName = getValue(NAME);
+        return MainApplication.worker.submit(() -> {
+            final long start = System.currentTimeMillis();
+            boolean layerMerged = false;
+            for (final Layer sourceLayer: sourceLayers) {
+                if (sourceLayer != null && !sourceLayer.equals(targetLayer)) {
+                    if (sourceLayer instanceof OsmDataLayer && targetLayer instanceof OsmDataLayer
+                            && ((OsmDataLayer) sourceLayer).isUploadDiscouraged() != ((OsmDataLayer) targetLayer).isUploadDiscouraged()
+                            && Boolean.TRUE.equals(GuiHelper.runInEDTAndWaitAndReturn(() ->
+                            warnMergingUploadDiscouragedLayers(sourceLayer, targetLayer)))) {
+                        break;
+                    }
+                    targetLayer.mergeFrom(sourceLayer);
+                    GuiHelper.runInEDTAndWait(() -> getLayerManager().removeLayer(sourceLayer));
+                    layerMerged = true;
+                }
+            }
+            if (layerMerged) {
+                getLayerManager().setActiveLayer(targetLayer);
+                Logging.info(tr("{0} completed in {1}", actionName, Utils.getDurationString(System.currentTimeMillis() - start)));
+            }
+        });
+    }
+
+    /**
      * Merges a list of layers together.
      * @param sourceLayers The layers to merge
      * @return a Future representing pending completion of the merge task, or {@code null}
@@ -99,6 +134,19 @@ public class MergeLayerAction extends AbstractMergeAction {
             return null;
         }
         return doMerge(targetLayers, Collections.singleton(sourceLayer));
+    }
+
+    /**
+     * Merges the given source layer with another one
+     * @param targetLayer The source layer to merge onto
+     * @param sourceLayer The source layer to merge
+     * @return a Future representing pending completion of the merge task, or {@code null}
+     * @since 11885 (return type)
+     */
+    public Future<?> mergeOntoTargetLayer(Layer targetLayer, Layer sourceLayer) {
+        if (sourceLayer == null)
+            return null;
+        return doMerge(targetLayer, Collections.singleton(sourceLayer));
     }
 
     @Override
