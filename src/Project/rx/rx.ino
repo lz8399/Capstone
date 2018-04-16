@@ -1,34 +1,29 @@
-
-// rf69 demo tx rx.pde
-// -*- mode: C++ -*-
-// Example sketch showing how to create a simple messageing client
-// with the RH_RF69 class. RH_RF69 class does not provide for addressing or
-// reliability, so you should only use RH_RF69  if you do not need the higher
-// level messaging abilities.
-// It is designed to work with the other example rf69_server.
-// Demonstrates the use of AES encryption, setting the frequency and modem 
-// configuration
+/*
+ * rx.ino
+ * Controls the receiver module for Team Mahogany's Senior Design Project
+ * For use with Arduino Pro Mini
+ */
 
 #include <SPI.h>
 #include <RH_RF69.h>
+#include <RHReliableDatagram.h>
 
-/************ Radio Setup ***************/
+/************ Constant Definitions ************/
 
-// Change to 434.0 or other frequency, must match RX's freq!
-#define RF69_FREQ 915.0
+#define RF69_FREQ     915.0 // use 915.0 MHz
 
-#if defined (__AVR_ATmega328P__)  // Feather 328P w/wing
-  #define RFM69_INT     2  // 
-  #define RFM69_CS      4  //
-  #define RFM69_RST     5  // "A"
-  #define LED           13
-#endif
+#define MY_ADDRESS    1 // server address
 
-// Singleton instance of the radio driver
-RH_RF69 rf69(RFM69_CS, RFM69_INT);
+#define RFM69_INT     2 // RFM69
+#define RFM69_CS      4 // interface
+#define RFM69_RST     5 // ports
 
-int16_t packetnum = 0;  // packet counter, we increment per xmission
+/************ Variable Declarations ************/
 
+RH_RF69 rf69(RFM69_CS, RFM69_INT); // radio driver instance
+
+// Class to manage message delivery and receipt, using the driver declared above
+RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 
 //from save_picture 
 import processing.serial.*;
