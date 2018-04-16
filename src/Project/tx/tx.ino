@@ -1,6 +1,7 @@
 /*
  * tx.ino
  * Controls the transmission module for Team Mahogany's Senior Design Project
+ * For use with Arduino Mega
  */
 
 #include <SPI.h>
@@ -20,11 +21,11 @@
 #define RFM69_INT     2 // RFM69
 #define RFM69_CS      4 // interface
 #define RFM69_RST     5 // ports
-/*
+/* For use with pro mini:
 #define GPS_TX        6 // GPS interface
 #define GPS_RX        7 // ports
 */
-#define GPSSerial Serial1 // remove when using the pro mini
+#define GPSSerial Serial1 // Pins 18 and 19 on mega
 
 #define SD_CS         10 // SD card module
 #define SD_CD         9  // interface ports
