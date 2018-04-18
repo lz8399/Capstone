@@ -14,5 +14,14 @@
     <orderEntry type="library" name="lib" level="project" />
     <orderEntry type="library" name="josm-custom" level="project" />
     <orderEntry type="library" name="tools" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/tools/commons-imaging-1.0-R1534292.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
