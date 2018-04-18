@@ -24,7 +24,6 @@
 #define RFM69_INT     3 
 #define RFM69_CS      4
 #define RFM69_RST     5  // changed from 2
-#define LED           13
 
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
@@ -39,8 +38,7 @@ void setup()
 {
   Serial.begin(115200);
   //while (!Serial) { delay(1); } // wait until serial console is open, remove if not tethered to computer
-
-  pinMode(LED, OUTPUT);     
+  
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
@@ -82,9 +80,7 @@ uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
 uint8_t data[] = "  OK";
 
 void loop() {
-/* DISABLE DELAY FOR BENCHMARK
-  delay(1000);  // Wait 1 second between transmits, could also 'sleep' here!
-*/
+
   char radiopacket[20] = "Hello World #";
   itoa(packetnum++, radiopacket+13, 10);
   Serial.print("Sending "); Serial.println(radiopacket);

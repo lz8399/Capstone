@@ -23,7 +23,6 @@
 #define RFM69_INT     3  // 
 #define RFM69_CS      4  //
 #define RFM69_RST     5  // changed from 2
-#define LED           13
 
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
@@ -38,7 +37,7 @@ void setup()
 {
   Serial.begin(115200);
   //while (!Serial) { delay(1); } // wait until serial console is open, remove if not tethered to computer
-  
+
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
@@ -70,9 +69,12 @@ void setup()
   uint8_t key[] = { 0x1c, 0xef, 0xb2, 0x33, 0xe9, 0x0b, 0xf2, 0x3c,
                     0xb7, 0xee, 0x23, 0x3f, 0xb0, 0x88, 0xa6, 0xcd };
   rf69.setEncryptionKey(key);
+ 
+  pinMode(LED, OUTPUT);
 
   Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
 }
+
 
 // Dont put this on the stack:
 uint8_t data[] = "And hello back to you";
@@ -87,16 +89,7 @@ void loop() {
     uint8_t from;
     if (rf69_manager.recvfromAck(buf, &len, &from)) {
       buf[len] = 0; // zero out remaining string
-      
-      Serial.print("Got packet from #"); Serial.print(from);
-      Serial.print(" [RSSI :");
-      Serial.print(rf69.lastRssi());
-      Serial.print("] : ");
       Serial.println((char*)buf);
-
-      // Send a reply back to the originator client
-      if (!rf69_manager.sendtoWait(data, sizeof(data), from))
-        Serial.println("Sending failed (no ack)");
     }
   }
 }

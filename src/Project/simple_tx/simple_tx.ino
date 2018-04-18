@@ -11,19 +11,19 @@
 #include <SPI.h>
 #include <RH_RF69.h>
 #include <RHReliableDatagram.h>
-
 /************ Radio Setup ***************/
 
 // Change to 434.0 or other frequency, must match RX's freq!
 #define RF69_FREQ 915.0
 
-// who am i? (server address)
-#define MY_ADDRESS     1
+// Where to send packets to!
+#define DEST_ADDRESS   1
+// change addresses for each client board, any number :)
+#define MY_ADDRESS     2
 
-#define RFM69_INT     3  // 
-#define RFM69_CS      4  //
+#define RFM69_INT     3 
+#define RFM69_CS      4
 #define RFM69_RST     5  // changed from 2
-#define LED           13
 
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
@@ -33,6 +33,7 @@ RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 
 
 int16_t packetnum = 0;  // packet counter, we increment per xmission
+uint16_t timeout = 10; // ms
 
 void setup() 
 {
@@ -42,7 +43,7 @@ void setup()
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
-  Serial.println("RFM69 RX Test!");
+  Serial.println("RFM69 TX Test!");
   Serial.println();
 
   // manual reset
@@ -69,34 +70,26 @@ void setup()
   // The encryption key has to be the same as the one in the server
   uint8_t key[] = { 0x1c, 0xef, 0xb2, 0x33, 0xe9, 0x0b, 0xf2, 0x3c,
                     0xb7, 0xee, 0x23, 0x3f, 0xb0, 0x88, 0xa6, 0xcd };
-  rf69.setEncryptionKey(key);
+  rf69.setEncryptionKey(key); 
+
+  rf69_manager.setTimeout(timeout);
 
   Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
 }
 
-// Dont put this on the stack:
-uint8_t data[] = "And hello back to you";
+
 // Dont put this on the stack:
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
+uint8_t data[] = "  OK";
 
 void loop() {
-  if (rf69_manager.available())
-  {
-    // Wait for a message addressed to us from the client
-    uint8_t len = sizeof(buf);
-    uint8_t from;
-    if (rf69_manager.recvfromAck(buf, &len, &from)) {
-      buf[len] = 0; // zero out remaining string
-      
-      Serial.print("Got packet from #"); Serial.print(from);
-      Serial.print(" [RSSI :");
-      Serial.print(rf69.lastRssi());
-      Serial.print("] : ");
-      Serial.println((char*)buf);
 
-      // Send a reply back to the originator client
-      if (!rf69_manager.sendtoWait(data, sizeof(data), from))
-        Serial.println("Sending failed (no ack)");
-    }
+  char radiopacket[20] = "Hello World #";
+  itoa(packetnum++, radiopacket+13, 10);
+  Serial.print("Sending "); Serial.println(radiopacket);
+  
+  // Send a message to the DESTINATION!
+  if (!rf69_manager.sendtoWait((uint8_t *)radiopacket, strlen(radiopacket), DEST_ADDRESS)) {
+    Serial.println("Sending failed (no ack)");
   }
 }
