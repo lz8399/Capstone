@@ -73,9 +73,6 @@ void setup()
   Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
 }
 
-
-// Dont put this on the stack:
-uint8_t data[] = "And hello back to you";
 // Dont put this on the stack:
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
 
