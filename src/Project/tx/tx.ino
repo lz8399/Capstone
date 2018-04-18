@@ -42,7 +42,8 @@
 // Transmitter Variables
 RH_RF69 rf69(RFM69_CS, RFM69_INT);                  // radio driver instance
 RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);  // class to manage transmission
-char radioPacket[RH_RF69_MAX_MESSAGE_LEN];          // single packet for transmission
+uint8_t radioPacket[RH_RF69_MAX_MESSAGE_LEN];       // single packet for transmission
+uint16_t timeout = 100; // ms
 
 // GPS Variables
 Adafruit_GPS GPS(&GPSSerial); // GPS driver instance
@@ -87,15 +88,17 @@ void setup() {
 void loop() {
 
   UpdateCPM();
-  UpdateGPS();
-
+  if (UpdateGPS()) {
+    TransmitStats();
+  }
+  
   // Try to read an image from the SD card
   EnableSD();
   image = SD.open(filename);
 
   // If successful, transmit the data and close the file
   if (image) {
-    TransmitData();
+    TransmitImage();
     image.close();
   }
 
@@ -151,17 +154,19 @@ void SetupRadio() {
   digitalWrite(RFM69_RST, LOW);
   delay(10);
   if (!rf69_manager.init()) {
-    Serial.println("ERROR: Could not initialize");
-  } else if (!rf69.setFrequency(RF69_FREQ)) {
-    Serial.println("ERROR: setFrequency failed");
-  } else {
-    // Set power and AES key of radio
-    rf69.setTxPower(20);
-    uint8_t key[] = { 0x1c, 0xef, 0xb2, 0x33, 0xe9, 0x0b, 0xf2, 0x3c,
-                      0xb7, 0xee, 0x23, 0x3f, 0xb0, 0x88, 0xa6, 0xcd };
-    rf69.setEncryptionKey(key);
-    Serial.println("success");
+    Serial.println("ERROR: Could not initialize"); return;
   }
+  if (!rf69.setFrequency(RF69_FREQ)) {
+    Serial.println("ERROR: setFrequency failed"); return;
+  }
+  
+  // Set power, AES key, and timeout of radio
+  rf69.setTxPower(20);
+  uint8_t key[] = { 0x1c, 0xef, 0xb2, 0x33, 0xe9, 0x0b, 0xf2, 0x3c,
+                    0xb7, 0xee, 0x23, 0x3f, 0xb0, 0x88, 0xa6, 0xcd };
+  rf69.setEncryptionKey(key);
+  rf69_manager.setTimeout(timeout);
+  Serial.println("success");
 }
 
 void EnableSD() {
@@ -214,31 +219,46 @@ void EnableTimerInterrupt() {
   TIMSK0 |= _BV(OCIE0A);
 }
 
-void TransmitData() {
-// Send all the data, including the CPM, GPS, and image
+bool TransmitStats() {
+// Send the CPM and GPS data; return true if ack is received, false otherwise
+  Serial.println("Transmitting Stats");
+  
+  EnableRadio();
+  
+  char radioPacket[RH_RF69_MAX_MESSAGE_LEN];
+  sprintf(radioPacket, "Timestamp: %s\nLocation: %s,%s\nAltitude: %s\nCPM: %u", timestamp,lat,lon,altitude,CPM);
+  Serial.println(radioPacket);
+  
+  return !rf69_manager.sendtoWait((uint8_t *)radioPacket, strlen(radioPacket), DEST_ADDRESS);
+}
+
+int TransmitImage() {
+// Send the image; returns the number of lost packets
   Serial.print("Transmitting ");
   Serial.println(filename);
 
   EnableRadio();
 
-  // Send the CPM and GPS coordinates
-  sprintf(radioPacket, "Timestamp: %s\nLocation: %s,%s\nAltitude: %s\nCPM: %u", timestamp,lat,lon,altitude,CPM);
-  TransmitPacket();
-
-  // Now send the image
+  uint8_t radioPacket[RH_RF69_MAX_MESSAGE_LEN];
   int numPackets = ceil(image.available()/RH_RF69_MAX_MESSAGE_LEN);
+  int lostPackets = 0;
+  
   for (int i = 0; i<numPackets; i++) {
     image.read(radioPacket,RH_RF69_MAX_MESSAGE_LEN);
-    TransmitPacket();
+    if (!rf69_manager.sendtoWait(radioPacket, RH_RF69_MAX_MESSAGE_LEN, DEST_ADDRESS)) {
+      lostPackets++;
+    }
   }
 }
 
-void TransmitPacket() {
+void TransmitPacket(uint8_t len) {
 // Send a single packet
-  Serial.println("Sending packet:");
-  Serial.println(radioPacket);
+
+  // print the packet to the console
+  Serial.write(radioPacket,len);
+  Serial.println();
   Serial.print("Awaiting acknowledgdement...");
-  if (!rf69_manager.sendtoWait((uint8_t *)radioPacket, strlen(radioPacket), DEST_ADDRESS)) {
+  if (!rf69_manager.sendtoWait(radioPacket, len, DEST_ADDRESS)) {
     Serial.println("FAILED");
     return;
   }
