@@ -70,8 +70,6 @@ void setup()
                     0xb7, 0xee, 0x23, 0x3f, 0xb0, 0x88, 0xa6, 0xcd };
   rf69.setEncryptionKey(key);
  
-  pinMode(LED, OUTPUT);
-
   Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
 }
 

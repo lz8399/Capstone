@@ -33,7 +33,7 @@ RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 
 
 int16_t packetnum = 0;  // packet counter, we increment per xmission
-uint16_t timeout = 10; // ms
+uint16_t timeout = 100; // ms
 
 void setup() 
 {
@@ -79,13 +79,11 @@ void setup()
 
 
 // Dont put this on the stack:
-uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
+char radiopacket[RH_RF69_MAX_MESSAGE_LEN] = "12345678ABCDEFGH12345678ABCDEFGH12345678ABCDEFGH12345678ABC";
 uint8_t data[] = "  OK";
 
 void loop() {
 
-  char radiopacket[20] = "Hello World #";
-  itoa(packetnum++, radiopacket+13, 10);
   Serial.print("Sending "); Serial.println(radiopacket);
   
   // Send a message to the DESTINATION!
