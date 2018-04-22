@@ -337,14 +337,22 @@ Build-Date: ${build.tstamp}
             <compilerarg line="-Xmaxwarns 1000"/>
         </javac>
     </target>
+
     <target name="compile" depends="init,javacc,compile-cots,compile-jmapviewer">
         <!-- JOSM -->
+
+        <path id="master-classpath">
+            <pathelement path="${pmd.dir}/commons-io-2.4.jar"/>
+            <pathelement path="${tools.dir}/commons-imaging-1.0-R1534292.jar"/>
+        </path>
+
         <javac compiler="${javac.compiler}" sourcepath="" srcdir="${src.dir}"
             excludes="com/**,javax/**,gnu/**,oauth/**,org/apache/commons/**,org/glassfish/**,org/openstreetmap/gui/jmapviewer/**,org/tukaani/**"
             destdir="${build.dir}" target="${java.lang.version}" source="${java.lang.version}" debug="on" includeantruntime="false" createMissingPackageInfoClass="false" encoding="UTF-8">
             <compilerclasspath>
                 <pathelement location="${error_prone_ant.jar}"/>
             </compilerclasspath>
+            <classpath refid="master-classpath"/>
             <compilerarg value="-Xlint:cast"/>
             <compilerarg value="-Xlint:deprecation"/>
             <compilerarg value="-Xlint:dep-ann"/>
