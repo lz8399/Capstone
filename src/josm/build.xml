@@ -344,6 +344,7 @@ Build-Date: ${build.tstamp}
         <path id="master-classpath">
             <pathelement path="${pmd.dir}/commons-io-2.4.jar"/>
             <pathelement path="${tools.dir}/commons-imaging-1.0-R1534292.jar"/>
+            <pathelement path="${tools.dir}/jssc-2.8.0.jar"/>
         </path>
 
         <javac compiler="${javac.compiler}" sourcepath="" srcdir="${src.dir}"
