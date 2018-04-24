@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="dummy_plugin">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/test/data/plugin/dummy_plugin.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

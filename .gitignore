@@ -4,3 +4,7 @@
 *.pptx
 # ignore word docs, we only upload pdfs once finalized
 *.docx
+# ignore DS_Store MacOS files
+*.DS_Store
+# ignore java compiled .class files
+*.class

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="josm_error_#4539.osm">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/test/data/regress/4539/josm_error_#4539.osm.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

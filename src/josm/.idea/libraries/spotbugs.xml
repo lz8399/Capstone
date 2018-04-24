@@ -1,0 +1,25 @@
+<component name="libraryTable">
+  <library name="spotbugs">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/jaxen-1.1.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/dom4j-2.1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/asm-commons-6.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/jcip-annotations-1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/bcel-6.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/spotbugs.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/asm-6.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/spotbugs-annotations.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/xml-apis-1.0.b2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/jFormatString-3.0.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/asm-analysis-6.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/asm-xml-6.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/commons-lang-2.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/jsr305-3.0.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/asm-util-6.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/spotbugs-ant.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tools/spotbugs/asm-tree-6.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

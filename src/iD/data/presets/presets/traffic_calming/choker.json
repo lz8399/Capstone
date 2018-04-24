@@ -1,0 +1,18 @@
+{
+    "icon": "poi-warning",
+    "fields": [
+        "direction_vertex"
+    ],
+    "geometry": [
+        "vertex",
+        "line"
+    ],
+    "terms": [
+        "speed",
+        "slow"
+    ],
+    "tags": {
+        "traffic_calming": "choker"
+    },
+    "name": "Traffic Choker"
+}

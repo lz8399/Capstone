@@ -1,0 +1,345 @@
+/* measurement values and units warnings (tickets #8687, #15719) */
+
+*[/^[0-9]+$/] {
+  throwWarning: tr("numerical key");
+  assertMatch: "way 123=foo";
+  assertNoMatch: "way ref.1=foo";
+}
+
+*[layer =~ /^\+\d/] {
+  throwWarning: tr("{0} value with + sign", "{0.key}");
+  fixAdd: concat("layer=", replace(tag("layer"), "+", ""));
+  assertMatch: "node layer=+1";
+  assertNoMatch: "node layer=1";
+  assertNoMatch: "node layer=-1";
+  assertNoMatch: "node layer=+foo";
+}
+
+*[layer][layer !~ /^0$|^(-|\+)?[1-5]$/] {
+  throwWarning: tr("{0} should be an integer value between -5 and 5", "{0.key}");
+  assertMatch: "node layer=-50";
+  assertMatch: "node layer=6";
+  assertMatch: "node layer=+10";
+  assertMatch: "node layer=0.5";
+  assertMatch: "node layer=0;1";
+  assertNoMatch: "node layer=-5";
+  assertNoMatch: "node layer=0";
+  assertNoMatch: "node layer=2";
+  assertNoMatch: "node layer=+5"; /* this is an invalid value, but this case is already covered by the previous rule */
+}
+
+*[building:levels][building:levels !~ /^(([0-9]|[1-9][0-9]*)(\.5)?)$/],
+*[level][level !~ /^((((-*[1-9]|[0-9])|-*[1-9][0-9]*)(\.5)?)|-0\.5)(;((((-*[1-9]|[0-9])|-*[1-9][0-9]*)(\.5)?)|-0\.5))*$/] { /* all numbers from -∞ to ∞ in 0.5 steps, optional multiple values seperated by a ; */
+  throwWarning: tr("{0} should have numbers only with optional .5 increments", "{0.key}");
+  assertMatch: "node level=one";
+  assertMatch: "node level=01";
+  assertMatch: "node level=-03";
+  assertMatch: "node level=-01.5";
+  assertMatch: "node level=2.3";
+  assertMatch: "node level=-0";
+  assertNoMatch: "node level=0";
+  assertNoMatch: "node level=1";
+  assertNoMatch: "node level=-1";
+  assertNoMatch: "node level=-0.5";
+  assertNoMatch: "node level=1.5";
+  assertNoMatch: "node level=12";
+  assertNoMatch: "node level=0;1";
+  assertNoMatch: "node level=1;1.5";
+  assertNoMatch: "node level=1;0.5";
+  assertNoMatch: "node level=0;-0.5";
+  assertNoMatch: "node level=-0.5;0";
+  assertNoMatch: "node level=-1;-0.5";
+  assertNoMatch: "node building:levels=1.5";
+  assertMatch: "node building:levels=-1";
+  assertNoMatch: "node building:levels=0"; /* valid because there can be building:levels:underground > 0 or roof:levels > 0 */
+}
+
+*[height][height =~ /^[0-9]+,[0-9][0-9]?( (m|ft))?$/] {
+  throwWarning: tr("unusual value of {0}: use . instead of , as decimal separator", "{0.key}");
+  fixAdd: concat("height=", replace(tag("height"), ",", "."));
+  set height_separator_autofix;
+  assertMatch: "node height=5,5";
+  assertMatch: "node height=12,00";
+  assertMatch: "node height=12,5 ft";
+  assertNoMatch: "node height=12,000";
+  assertNoMatch: "node height=3,50,5";
+  assertNoMatch: "node height=3.5";
+  assertNoMatch: "node height=4";
+}
+*[height][height !~ /^(([0-9]+\.?[0-9]*( (m|ft))?)|([1-9][0-9]*\'((10|11|[0-9])((\.[0-9]+)?)\")?))$/]!.height_separator_autofix {
+  throwWarning: tr("unusual value of {0}: meters is default; point is decimal separator; if units, put space then unit", "{0.key}");
+  assertMatch: "node height=medium";
+  assertMatch: "node height=-5";
+  assertNoMatch: "node height=2 m";
+  assertNoMatch: "node height=5";
+  assertNoMatch: "node height=7.8";
+  assertNoMatch: "node height=20 ft";
+  assertNoMatch: "node height=22'";
+}
+
+*[maxheight][maxheight =~ /^[0-9]+,[0-9][0-9]?( (m|ft))?$/] {
+  throwWarning: tr("unusual value of {0}: use . instead of , as decimal separator", "{0.key}");
+  fixAdd: concat("maxheight=", replace(tag("maxheight"), ",", "."));
+  set maxheight_separator_autofix;
+  assertMatch: "node maxheight=5,5";
+  assertMatch: "node maxheight=12,00";
+  assertMatch: "node maxheight=12,5 ft";
+  assertNoMatch: "node maxheight=12,000";
+  assertNoMatch: "node maxheight=3,50,5";
+  assertNoMatch: "node maxheight=3.5";
+  assertNoMatch: "node maxheight=4";
+}
+*[maxheight][maxheight !~ /^(([1-9][0-9]*(\.[0-9]+)?( (m|ft))?)|([0-9]+\'(([0-9]|10|11)(\.[0-9]*)?\")?)|none|default)$/]!.maxheight_separator_autofix {
+  throwWarning: tr("unusual value of {0}: meters is default; point is decimal separator; if units, put space then unit", "{0.key}");
+  assertMatch: "node maxheight=something";
+  assertMatch: "node maxheight=-5";
+  assertMatch: "node maxheight=0";
+  assertNoMatch: "node maxheight=4";
+  assertNoMatch: "node maxheight=3.5";
+  assertNoMatch: "node maxheight=2 m";
+  assertNoMatch: "node maxheight=14 ft";
+  assertNoMatch: "node maxheight=10'";
+  assertNoMatch: "node maxheight=16'3\"";
+}
+
+*[width][width =~ /^[0-9]+,[0-9][0-9]?( (m|ft))?$/] {
+  throwWarning: tr("unusual value of {0}: use . instead of , as decimal separator", "{0.key}");
+  fixAdd: concat("width=", replace(tag("width"), ",", "."));
+  set width_separator_autofix;
+  assertMatch: "node width=5,5";
+  assertMatch: "node width=12,00";
+  assertNoMatch: "node width=12,000";
+  assertNoMatch: "node width=3,50,5";
+  assertNoMatch: "node width=3.5";
+  assertNoMatch: "node width=4";
+}
+*[width][width !~ /^(([0-9]+\.?[0-9]*( [a-z]+)?)|([0-9]+\'([0-9]+\.?[0-9]*\")?))$/]!.width_separator_autofix {
+  throwWarning: tr("unusual value of {0}: meters is default; point is decimal separator; if units, put space then unit", "{0.key}");
+  assertMatch: "way width=something";
+  assertMatch: "way width=-5";
+  assertNoMatch: "way width=3";
+  assertNoMatch: "way width=0.5";
+  assertNoMatch: "way width=1 m";
+  assertNoMatch: "way width=10 ft";
+  assertNoMatch: "way width=1'";
+  assertNoMatch: "way width=10'5\"";
+}
+
+*[maxwidth][maxwidth =~ /^[0-9]+,[0-9][0-9]?( (m|ft))?$/] {
+  throwWarning: tr("unusual value of {0}: use . instead of , as decimal separator", "{0.key}");
+  fixAdd: concat("maxwidth=", replace(tag("maxwidth"), ",", "."));
+  set maxwidth_separator_autofix;
+  assertMatch: "node maxwidth=5,5";
+  assertMatch: "node maxwidth=12,00";
+  assertNoMatch: "node maxwidth=12,000";
+  assertNoMatch: "node maxwidth=3,50,5";
+  assertNoMatch: "node maxwidth=3.5";
+  assertNoMatch: "node maxwidth=4";
+}
+*[maxwidth][maxwidth !~ /^(([0-9]+\.?[0-9]*( (m|ft))?)|([0-9]+\'[0-9]+\.?[0-9]*\"))$/]!.maxwidth_separator_autofix {
+  throwWarning: tr("unusual value of {0}: meters is default; point is decimal separator; if units, put space then unit", "{0.key}");
+  assertMatch: "way maxwidth=something";
+  assertMatch: "way maxwidth=-5";
+  assertNoMatch: "way maxwidth=2";
+  assertNoMatch: "way maxwidth=6'6\"";
+  assertNoMatch: "way maxwidth=2.5";
+  assertNoMatch: "way maxwidth=7 ft";
+}
+
+*[maxweight][maxweight =~ /^[0-9]+,[0-9][0-9]?( (t|kg|lbs))?$/] {
+  throwWarning: tr("unusual value of {0}: use . instead of , as decimal separator", "{0.key}");
+  fixAdd: concat("maxweight=", replace(tag("maxweight"), ",", "."));
+  set maxweight_separator_autofix;
+  assertMatch: "node maxweight=5,5";
+  assertMatch: "node maxweight=12,00";
+  assertNoMatch: "node maxweight=12,000";
+  assertNoMatch: "node maxweight=3,50,5";
+  assertNoMatch: "node maxweight=3.5";
+  assertNoMatch: "node maxweight=4";
+}
+*[maxweight][maxweight !~ /^(([0-9]+\.?[0-9]*( (t|kg|lbs))?)|([0-9]+\'[0-9]+\.?[0-9]*\"))$/]!.maxweight_separator_autofix {
+  throwWarning: tr("unusual value of {0}: tonne is default; point is decimal separator; if units, put space then unit", "{0.key}");
+  assertMatch: "way maxweight=something";
+  assertMatch: "way maxweight=-5";
+  assertNoMatch: "way maxweight=2";
+  assertNoMatch: "way maxweight=6'6\"";
+  assertNoMatch: "way maxweight=2.5";
+  assertNoMatch: "way maxweight=7 kg";
+}
+
+way[maxspeed][maxspeed !~ /^(signals|none|unposted|variable|walk|[1-9][0-9]*( [a-z]+)?|[A-Z][A-Z]:(urban|rural|living_street|motorway))$/],
+way[maxspeed:forward][maxspeed:forward !~ /^(signals|none|unposted|variable|walk|[1-9][0-9]*( [a-z]+)?|[A-Z][A-Z]:(urban|rural|living_street|motorway))$/],
+way[maxspeed:backward][maxspeed:backward !~ /^(signals|none|unposted|variable|walk|[1-9][0-9]*( [a-z]+)?|[A-Z][A-Z]:(urban|rural|living_street|motorway))$/] {
+  throwWarning: tr("unusual value of {0}", "{0.key}");
+  assertMatch: "way maxspeed=something";
+  assertMatch: "way maxspeed=-50";
+  assertMatch: "way maxspeed=0";
+  assertNoMatch: "way maxspeed=50";
+  assertNoMatch: "way maxspeed=30 mph";
+  assertNoMatch: "way maxspeed=RO:urban";
+  assertNoMatch: "way maxspeed=RU:rural";
+  assertNoMatch: "way maxspeed=RU:living_street";
+  assertNoMatch: "way maxspeed=DE:motorway";
+  assertNoMatch: "way maxspeed=signals";
+  assertNoMatch: "way maxspeed=none";
+  assertNoMatch: "way maxspeed=variable";
+}
+
+*[distance][distance =~ /^[0-9]+,[0-9][0-9]?( (m|km|mi|nmi))?$/] {
+  throwWarning: tr("unusual value of {0}: use . instead of , as decimal separator", "{0.key}");
+  fixAdd: concat("distance=", replace(tag("distance"), ",", "."));
+  set distance_separator_autofix;
+  assertMatch: "node distance=5,5";
+  assertMatch: "node distance=12,00";
+  assertNoMatch: "node distance=12,000";
+  assertNoMatch: "node distance=3,50,5";
+  assertNoMatch: "node distance=3.5";
+  assertNoMatch: "node distance=4";
+}
+*[distance][distance !~ /^(([0-9]+\.?[0-9]*( (m|km|mi|nmi))?)|([0-9]+\'[0-9]+\.?[0-9]*\"))$/]!.distance_separator_autofix {
+  throwWarning: tr("unusual value of {0}: kilometers is default; point is decimal separator; if units, put space then unit", "{0.key}");
+  assertMatch: "way distance=something";
+  assertMatch: "way distance=-5";
+  assertNoMatch: "way distance=2";
+  assertNoMatch: "way distance=2.5";
+  assertNoMatch: "way distance=7 mi";
+}
+
+way[voltage][voltage =~ /(.*[A-Za-z].*)|.*,.*|.*( ).*/] {
+  throwWarning: tr("voltage should be in volts with no units/delimiter/spaces");
+  assertMatch: "way voltage=medium";
+  assertNoMatch: "way voltage=15000";
+}
+
+/* some users are using frequency for other purposes (not electromagnetic) 
+   with the values 'perennial' and 'intermittent'; the vast majority are 0, 16.7, 50 and 60 */
+way[frequency][frequency !~ /^(0|[1-9][0-9]*(\.[0-9]+)?)( (kHz|MHz|GHz|THz))?$/] {
+  throwWarning: tr("unusual value of {0}", "{0.key}");
+  assertMatch: "way frequency=something";
+  assertNoMatch: "way frequency=0"; /* DC */
+  assertNoMatch: "way frequency=16.7";
+  assertNoMatch: "way frequency=50";
+  assertNoMatch: "way frequency=680 kHz";
+  assertNoMatch: "way frequency=123.5 MHz";
+}
+
+way[gauge][gauge !~ /^([1-9][0-9]{1,3}(;[1-9][0-9]{1,3})*|broad|standard|narrow)$/] {
+  throwWarning: tr("unusual value of {0}", "{0.key}");
+  assertMatch: "way gauge=something";
+  assertNoMatch: "way gauge=1435";
+  assertNoMatch: "way gauge=1000;1435";
+  assertNoMatch: "way gauge=standard";
+  assertNoMatch: "way gauge=narrow";
+}
+
+/* the numbers for percentage and degrees include could probably be bracketed a bit more precisely */
+way[incline][incline !~ /^(up|down|-?([0-9]+?(\.[1-9]%)?|100)[%°]?)$/] {
+  throwWarning: tr("unusual value of {0}", "{0.key}");
+  suggestAlternative: "x%";
+  suggestAlternative: "x°";
+  suggestAlternative: "up";
+  suggestAlternative: "down";
+  assertMatch: "way incline=extreme";
+  assertNoMatch: "way incline=up";
+  assertNoMatch: "way incline=down";
+  assertNoMatch: "way incline=10%";
+  assertNoMatch: "way incline=-5%";
+  assertNoMatch: "way incline=10°";
+}
+
+/* see ticket #9631 */
+*[population][population !~ /^[0-9]+$/ ] {
+  throwWarning: tr("{0} must be a numeric value", "{0.key}");
+}
+
+/* must be an integer positive number only and not 0, see #10837 (lanes), #11055 (screen) */
+way[lanes][lanes !~ /^[1-9]([0-9]*)$/][highway],
+way["lanes:backward"]["lanes:backward" !~ /^[1-9]([0-9]*)$/][highway],
+way["lanes:forward"]["lanes:forward" !~ /^[1-9]([0-9]*)$/][highway],
+*[screen][screen !~ /^[1-9]([0-9]*)$/][amenity=cinema] {
+  throwError: tr("{0} must be a positive integer number", "{0.key}");
+  assertMatch: "way highway=residential lanes=-1";
+  assertMatch: "way highway=residential lanes=5.5";
+  assertMatch: "way highway=residential lanes=1;2";
+  assertMatch: "way highway=residential lanes:forward=-1";
+  assertMatch: "way highway=residential lanes:backward=-1";
+  assertNoMatch: "way highway=residential lanes=1";
+  assertMatch: "node amenity=cinema screen=led";
+  assertNoMatch: "node amenity=cinema screen=8";
+}
+*[admin_level][admin_level !~ /^(1|2|3|4|5|6|7|8|9|10|11|12)$/] {
+  throwWarning: tr("unusual value of {0}", "{0.key}");
+  assertMatch: "node admin_level=0";
+  assertMatch: "node admin_level=-1";
+  assertMatch: "node admin_level=13";
+  assertNoMatch: "node admin_level=5";
+}
+
+/* #14989 */
+*[direction][direction<0],
+*[direction][direction>=360] {
+  throwWarning: tr("unusual value of {0}", "{0.key}");
+  assertMatch: "node direction=-10";
+  assertMatch: "node direction=360";
+  assertNoMatch: "node direction=0";
+}
+*[direction][direction !~ /^([0-9][0-9]?[0-9]?|north|east|south|west|N|E|S|W|NE|SE|SW|NW|NNE|ENE|ESE|SSE|SSW|WSW|WNW|NNW|forward|backward|both|clockwise|anti-clockwise|anticlockwise|up|down)(-([0-9][0-9]?[0-9]?|N|E|S|W|NE|SE|SW|NW|NNE|ENE|ESE|SSE|SSW|WSW|WNW|NNW))?(;([0-9][0-9]?[0-9]?|N|E|S|W|NE|SE|SW|NW|NNE|ENE|ESE|SSE|SSW|WSW|WNW|NNW)-([0-9][0-9]?[0-9]?|N|E|S|W|NE|SE|SW|NW|NNE|ENE|ESE|SSE|SSW|WSW|WNW|NNW))*$/] {
+  throwWarning: tr("unusual value of {0}", "{0.key}");
+  assertMatch: "node direction=north-down";
+  assertMatch: "node direction=rome";
+  assertMatch: "node direction=C";
+  assertMatch: "node direction=NNNE";
+  assertMatch: "node direction=1360";
+  assertNoMatch: "node direction=NE-S"; /* ranges are used at tourism=viewpoint*/
+  assertMatch: "node direction=north-south"; /* ranges only in numbers or short NESW form */
+  assertMatch: "node direction=north-east"; /* if range use N-E, if single direcion use NE */
+  assertNoMatch: "node direction=0-360"; /* complete panorama view */
+  assertNoMatch: "node direction=45-100;190-250;300-360";
+  assertMatch: "node direction=45-100;190-250;300";
+  assertNoMatch: "node direction=up"; 
+  assertNoMatch: "node direction=down"; /* up/down are replaced by incline tag, has separate warning */
+  assertNoMatch: "node direction=0";
+  assertNoMatch: "node direction=45";
+  assertNoMatch: "node direction=360";
+  assertNoMatch: "node direction=N";
+  assertNoMatch: "node direction=NNE";
+  assertNoMatch: "node direction=west";
+  assertNoMatch: "node direction=forward";
+  assertNoMatch: "node direction=anti-clockwise";
+  assertNoMatch: "node direction=anticlockwise"; /* both spellings are in use and even wiki uses both */
+}
+
+/* #14786 (should be safe to just remove the meters unit from the value) */
+*[ele][ele =~ /^-?[0-9]+(\.[0-9]+)? ?m$/] {
+  throwWarning: tr("{0} must be a numeric value, in meters and without units", "{0.key}");
+  fixAdd: concat("ele=", trim(replace(tag("ele"), "m", "")));
+  set ele_meter_remove_autofix;
+  assertMatch: "node ele=12m";
+  assertMatch: "node ele=12 m";
+  assertNoMatch: "node ele=12km";
+  assertMatch: "node ele=12.1m";
+  assertMatch: "node ele=-12.1 m";
+  assertNoMatch: "node ele=12";
+  assertNoMatch: "node ele=high";
+}
+*[ele][ele =~ /^[0-9]+,[0-9][0-9]?$/] {
+  throwWarning: tr("unusual value of {0}: use . instead of , as decimal separator", "{0.key}");
+  fixAdd: concat("ele=", replace(tag("ele"), ",", "."));
+  set ele_separator_autofix;
+  assertMatch: "node ele=5,5";
+  assertMatch: "node ele=12,00";
+  assertNoMatch: "node ele=8,848"; /* wrongly used thousands separator */
+  assertNoMatch: "node ele=3,50,5";
+  assertNoMatch: "node ele=3.5";
+  assertNoMatch: "node ele=4";
+}
+*[ele][ele !~ /^-?[0-9]+(\.[0-9]+)?$/]!.ele_meter_remove_autofix!.ele_separator_autofix{
+  throwWarning: tr("{0} must be a numeric value, in meters and without units", "{0.key}");
+  assertNoMatch: "node ele=12m";
+  assertNoMatch: "node ele=12 m";
+  assertMatch: "node ele=12km";
+  assertNoMatch: "node ele=12.1m";
+  assertNoMatch: "node ele=-12.1 m";
+  assertNoMatch: "node ele=12";
+  assertMatch: "node ele=high";
+}

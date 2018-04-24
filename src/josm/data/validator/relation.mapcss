@@ -1,0 +1,41 @@
+/* relation types */
+
+relation[!type] {
+  throwError: tr("relation without type");
+  assertMatch: "relation name=Foo";
+  assertNoMatch: "relation type=route name=Foo";
+}
+
+/* from http://wiki.openstreetmap.org/wiki/Types_of_relation */
+/* see also #9071 */
+relation[type=route][!route],
+relation[type=route_master][!route_master],
+relation[type=restriction][!/^restriction/], /* see #11586 */
+relation[type=boundary][!boundary],
+relation[type=public_transport][!public_transport],
+relation[type=waterway][!waterway],
+relation[type=enforcement][!enforcement] {
+  throwWarning: tr("{0} relation without {0} tag", "{1.key}");
+  group: tr("missing tag");
+  assertMatch: "relation type=route";
+  assertNoMatch: "relation type=route route=train";
+  assertMatch: "relation type=route_master";
+  assertNoMatch: "relation type=route_master route_master=train";
+  assertMatch: "relation type=restriction";
+  assertNoMatch: "relation type=restriction restriction=no_left_turn";
+  assertMatch: "relation type=boundary";
+  assertNoMatch: "relation type=boundary boundary=administrative";
+  assertNoMatch: "relation type=site site=administrative";
+  assertMatch: "relation type=public_transport";
+  assertNoMatch: "relation type=public_transport public_transport=stop_area";
+  assertMatch: "relation type=waterway";
+  assertNoMatch: "relation type=waterway waterway=river";
+  assertMatch: "relation type=enforcement";
+  assertNoMatch: "relation type=enforcement enforcement=maxspeed";
+}
+
+/* #15208 */
+relation[type=route][route=mtb    ] > way[bicycle=use_sidepath],
+relation[type=route][route=bicycle] > way[bicycle=use_sidepath] { 
+  throwWarning: tr("way with {0} is part of a bicycle route relation", "{0.tag}");
+}
