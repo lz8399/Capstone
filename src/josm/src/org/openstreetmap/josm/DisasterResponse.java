@@ -1,5 +1,6 @@
 package org.openstreetmap.josm;
 
+import jssc.SerialPort;
 import org.openstreetmap.josm.actions.DiskAccessAction;
 import org.openstreetmap.josm.actions.MergeLayerAction;
 import org.openstreetmap.josm.data.coor.EastNorth;
@@ -14,10 +15,15 @@ import org.openstreetmap.josm.gui.layer.*;
 import org.openstreetmap.josm.gui.layer.geoimage.GeoImageLayer;
 import org.openstreetmap.josm.gui.layer.geoimage.ImageEntry;
 import org.openstreetmap.josm.gui.widgets.AbstractFileChooser;
+import org.openstreetmap.josm.tools.Logging;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -36,11 +42,71 @@ public class DisasterResponse {
         zoomToTufts();
 
         // monitor new images and process them in a new dynamic "Geotagged Images" layer
-        new Thread(DisasterResponse::monitorThread).start();
+        //new Thread(DisasterResponse::monitorThread).start();
 
         // pretend radiation info
         //testRadiationLayer();
 
+        // monitor serial port for incoming images and save them to disk
+        new Thread(DisasterResponse::monitorSerialForImages).start();
+
+    }
+
+    private static void saveMsg(List<Byte> byteObjects)
+    {
+        String timestamp = new Date().toString();
+        byte[] bytes = new byte[byteObjects.size()];
+
+        int j=0;
+        // Unboxing byte values. (Byte[] to byte[])
+        for(Byte b: byteObjects)
+            bytes[j++] = Byte.valueOf(b);
+
+        try {
+            BufferedImage img = ImageIO.read(new ByteArrayInputStream(bytes));
+            File outputFile = new File(String.format("C:\\Users\\Kevin\\git\\Capstone\\sample_data2\\%s.jpg", timestamp));
+            ImageIO.write(img, "jpg", outputFile);
+        } catch (IOException ex) {
+            System.out.println(ex);
+        }
+    }
+
+    private static void monitorSerialForImages()
+    {
+        try {Thread.sleep(3000); } catch (Exception unused) {}
+        Logging.info("Attempting to monitor serial port...");
+
+        SerialPort serialPort = new SerialPort("COM3");
+        try {
+            serialPort.openPort();//Open serial port
+            serialPort.setParams(115200, 8, 1, 0);//Set params.
+            while (true) {
+                List<Byte> bytes = new ArrayList<>();
+                Logging.info("MONITORING SERIAL PORT...");
+
+                boolean reading = false;
+                byte[] buffer = serialPort.readBytes(10);
+                if (buffer != null) {
+                    for (byte b : buffer) {
+                        byte[] bt = new byte[1];
+                        bt[0] = b;
+                        Logging.info(new String(bt, "UTF-8"));
+
+                        if (!reading && (char) b == '<')
+                            reading = true;
+                        if (reading) {
+                            if ((char) b == '>') {
+                                saveMsg(bytes);
+                                reading = false;
+                                bytes.clear();
+                            } else {
+                                bytes.add(b);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) { Logging.error(ex.toString());}
     }
 
     private static void monitorThread() {
@@ -224,43 +290,13 @@ public class DisasterResponse {
             }
         }
 
-//        List<Layer> curLayers = MainApplication.getLayerManager().getLayers(); //only gets the one Premium imagery layer!!
-//
-//        List<Layer> geoTaggedLayers = new ArrayList<>();
-//        for (Layer layer : curLayers) {
-//            if (layer.getName().contains("Geotagged"))
-//            {
-//                geoTaggedLayers.add(layer);
-//            }
-//        }
-//
-//        Layer targetLayer = geoTaggedLayers.get(0);
-
-        //AbstractFileChooser fc = DiskAccessAction.createAndOpenFileChooser(true, false, null,
-        //        JpgImporter.FILE_FILTER_WITH_FOLDERS, JFileChooser.FILES_ONLY, "geoimage.lastdirectory");
-        //if (fc == null)
-        //    return;
-        //ImageEntry entry = new ImageEntry(fc.getSelectedFile());
-//        ImageEntry entry = new ImageEntry(file);
-//
-//        //ImageEntry entry = targetLayer.getImages();
-//        entry.setFile(file);
-//        entry.setPos(coords);
-//        entry.setSpeed(90.0);
-//        entry.setElevation(99.0);
-//        entry.setGpsTime(new Date(2));
-//        entry.setExifCoor(coords);
-//        entry.setExifTime(new Date(1));
-//        entry.setExifImgDir(99.2);
-//        entry.flagNewGpsData();
         File jpg = new File("C:\\Users\\Kevin\\git\\Capstone\\sample_data\\Image uploaded from iOS.jpg");
         File dst = new File("C:\\Users\\Kevin\\git\\Capstone\\sample_data\\Image uploaded from iOS-EDITED.jpg");
 
-        // THIS WORKED JUST NEED TO BUILD IN ANT
+        // THIS WORKS, JUST NEED TO WORK IN ANT
         ExifMetadataEditor editor = new ExifMetadataEditor();
         try {
-            editor.changeExifMetadata(jpg, dst);
+            editor.changeExifMetadata(jpg, dst, coords);
         } catch (Exception ex) {}
     }
-
 }

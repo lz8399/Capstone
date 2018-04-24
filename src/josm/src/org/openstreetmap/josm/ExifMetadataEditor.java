@@ -13,10 +13,11 @@ import org.apache.commons.imaging.formats.tiff.constants.ExifTagConstants;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
 import org.apache.commons.io.IOUtils;
+import org.openstreetmap.josm.data.coor.LatLon;
 
 public class ExifMetadataEditor {
 
-    public void changeExifMetadata(final File jpegImageFile, final File dst)
+    public void changeExifMetadata(final File jpegImageFile, final File dst, LatLon coords)
             throws IOException, ImageReadException, ImageWriteException {
         OutputStream os = null;
         try {
@@ -77,11 +78,8 @@ public class ExifMetadataEditor {
 
             {
                 // Example of how to add/update GPS info to output set.
-
-                // New York City
-                final double longitude = -74.0; // 74 degrees W (in Degrees East)
-                final double latitude = 40 + 43 / 60.0; // 40 degrees N (in Degrees
-                // North)
+                final double longitude = coords.lon();
+                final double latitude = coords.lat();
 
                 outputSet.setGPSInDegrees(longitude, latitude);
             }

@@ -276,6 +276,12 @@ public class BugReportDialog extends JDialog {
                     return SuppressionMode.NONE;
                 }
 
+                JOptionPane.showMessageDialog(null, e.getMessage(), "InfoBox: ", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, e.toString(), "InfoBox: ", JOptionPane.INFORMATION_MESSAGE);
+
+                JOptionPane.showMessageDialog(null, e.getStackTrace(), "InfoBox: ", JOptionPane.INFORMATION_MESSAGE);
+
+
                 BugReport report = new BugReport(e);
                 BugReportDialog dialog = new BugReportDialog(report);
                 dialog.setShowSuppress(exceptionCounter > 0);
