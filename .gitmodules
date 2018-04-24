@@ -4,3 +4,9 @@
 [submodule "src/Adafruit_GPS"]
 	path = src/Adafruit_GPS
 	url = https://github.com/adafruit/Adafruit_GPS
+[submodule "src/MissionPlanner"]
+	path = src/MissionPlanner
+	url = https://github.com/ArduPilot/MissionPlanner
+[submodule "src/ardupilot"]
+	path = src/ardupilot
+	url = https://github.com/ArduPilot/ardupilot
