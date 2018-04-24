@@ -8,3 +8,8 @@
 *.DS_Store
 # ignore java compiled .class files
 *.class
+# ignore IntelliJ specific files
+src/josm/josm.iml
+src/josm/.idea/*
+# ignore Josm build directory
+src/josm/build
