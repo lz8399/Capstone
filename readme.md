@@ -97,7 +97,7 @@ Team Mahogany:
 
 ## License
 
-Adafruit_GPS is licensed under [BSD licesne](https://github.com/adafruit/Adafruit_GPS/blob/77fe3484374837cecf2dd8387f3a62b1d5c832f9/license.txt). 
+Adafruit_GPS is licensed under [BSD license](https://github.com/adafruit/Adafruit_GPS/blob/77fe3484374837cecf2dd8387f3a62b1d5c832f9/license.txt). 
 RadioHead is licensed under [GPL v2](https://github.com/PaulStoffregen/RadioHead/blob/3d02f09670eb3880067e989998309dcfa2aa7a68/LICENSE). 
 JOSM is licensed under the [GPL v2](http://www.gnu.org/licenses/old-licenses/gpl-2.0.html) and [GPL v3](http://www.gnu.org/licenses/gpl.html). 
 
