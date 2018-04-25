@@ -52,10 +52,6 @@ WebODM or a similar tool would have been ideal to take overlapping images and st
   * [WebODM](https://github.com/kdorosh/Capstone/tree/master/src/WebODM) - A web-based tool for post-flight processing of drone imagery, built on top of [OpenDroneMap](https://github.com/OpenDroneMap/OpenDroneMap). The secondary plan was to leverage the image-stitching and clean UI base of WebODM for our uses, packagaing the web tool into a desktop application into a native desktop app using [Electron](https://github.com/electron/electron). This complex project suffered recent undocumented changes becoming more trouble than it was worth --> abandoned code pivoted to more standard desktop development using [josm](https://github.com/openstreetmap/josm) early this semester.
   * [iD](https://github.com/kdorosh/Capstone/tree/master/src/iD) - A web-based branch of the OpenStreetMap project briefly considered between WebODM and josm.
 
-### Prerequisites
-
-[Install Mission Planner](http://ardupilot.org/planner/docs/common-install-mission-planner.html) before you try to build Mission Planner.
-
 ### Building
 
 **Build the Team Mahogany Arduino firmware**
@@ -101,15 +97,16 @@ Team Mahogany:
 
 ## License
 
-Adafruit_GPS is licensed under [BSD licesne](https://github.com/adafruit/Adafruit_GPS/blob/77fe3484374837cecf2dd8387f3a62b1d5c832f9/license.txt).
-RadioHead is licensed under [GPL v2](https://github.com/PaulStoffregen/RadioHead/blob/3d02f09670eb3880067e989998309dcfa2aa7a68/LICENSE).
-JOSM is licensed under the [GPL v2](http://www.gnu.org/licenses/old-licenses/gpl-2.0.html) and [GPL v3](http://www.gnu.org/licenses/gpl.html).
+Adafruit_GPS is licensed under [BSD licesne](https://github.com/adafruit/Adafruit_GPS/blob/77fe3484374837cecf2dd8387f3a62b1d5c832f9/license.txt). 
+RadioHead is licensed under [GPL v2](https://github.com/PaulStoffregen/RadioHead/blob/3d02f09670eb3880067e989998309dcfa2aa7a68/LICENSE). 
+JOSM is licensed under the [GPL v2](http://www.gnu.org/licenses/old-licenses/gpl-2.0.html) and [GPL v3](http://www.gnu.org/licenses/gpl.html). 
 
 Thus, this project is similarly licensed under the GPL v3 and BSD licenses.
 
 ## Acknowledgments
 
 * Hat tip again to open-sourced developers everywhere.
-* Thanks to the Tufts EE and CS departments for their support, hardware, and communication on this project.
+* Thanks to the Tufts EE and CS departments for their support, hardware ($$$!), and communication on this project.
 * Thanks to Victor (Tufts graduate student) for taking the time to catch us up on the project and flying the drone.
-* Thanks to our sponsor, Dr. Karen Panetta, for her support of us and the project.
+* Special thanks to our sponsor, Dr. Karen Panetta, for her support of us and the project.
+* Special thanks to our professors, Prof. Lasser and Prof. Guyer, for their continued feedback on the project.
