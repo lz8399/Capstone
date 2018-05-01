@@ -8,19 +8,13 @@ import org.apache.commons.imaging.formats.jpeg.JpegImageMetadata;
 import org.apache.commons.imaging.formats.tiff.TiffImageMetadata;
 import org.apache.commons.io.FileUtils;
 import org.openstreetmap.josm.actions.MergeLayerAction;
-import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.coor.conversion.LatLonParser;
 import org.openstreetmap.josm.data.gpx.*;
-import org.openstreetmap.josm.data.osm.DataSet;
-import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.io.importexport.JpgImporter;
 import org.openstreetmap.josm.gui.layer.*;
-import org.openstreetmap.josm.gui.layer.gpx.GpxDrawHelper;
-import org.openstreetmap.josm.gui.layer.markerlayer.Marker;
-import org.openstreetmap.josm.gui.layer.markerlayer.MarkerLayer;
 import org.openstreetmap.josm.tools.Logging;
 
 import javax.imageio.*;
@@ -49,15 +43,21 @@ public class DisasterResponse {
         zoomToTufts();
 
         // pretend radiation info
-        testRadiationLayer();
+        //testRadiationLayer();
 
         // monitor serial port for incoming images and save them to disk
-        //new Thread(DisasterResponse::monitorSerialForImages).start();
-
+        new Thread(DisasterResponse::monitorSerialForImages).start();
     }
 
     private static void monitorSerialForImages()
     {
+        // Prep Radiation Layer
+        int cpsCounter = 2;
+        GpxData data = new GpxData();
+        GpxLayer gpx = new GpxLayer(data);
+        gpx.setName("Radiation Layer");
+        MainApplication.getLayerManager().addLayer(gpx);
+
         // delete all other files already here
         try {
             FileUtils.cleanDirectory(new File(save_dir));
@@ -100,6 +100,10 @@ public class DisasterResponse {
                         dst.renameTo(outputFile);
 
                         ProcessImage(outputFile);
+
+                        // Add radiation layer info as well
+                        RadiationMarker radMarker = new RadiationMarker(cpsCounter++, coords);
+                        data.addRoute(radMarker);
 
                     } catch (IOException ex) {
                         Logging.error(ex.toString());

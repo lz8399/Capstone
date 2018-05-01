@@ -182,6 +182,9 @@ Build-Date: ${build.tstamp}
             <zipfileset dir="data" prefix="data"/>
             <zipfileset dir="styles" prefix="styles"/>
             <zipfileset dir="${src.dir}/org/openstreetmap/gui/jmapviewer/images" prefix="org/openstreetmap/gui/jmapviewer/images"/>
+            <zipgroupfileset dir="${pmd.dir}" includes="commons-io-2.4.jar" />
+            <zipgroupfileset dir="${tools.dir}" includes="commons-imaging-1.0-R1534292.jar" />
+            <zipgroupfileset dir="${tools.dir}" includes="jssc-2.8.0.jar" />
         </jar>
     </target>
     <!-- Mac OS X target -->

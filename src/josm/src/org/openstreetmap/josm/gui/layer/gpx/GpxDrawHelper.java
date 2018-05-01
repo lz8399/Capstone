@@ -481,7 +481,6 @@ public class GpxDrawHelper implements SoMChangeListener, MapViewPaintable.LayerP
         } // end for trkpnt
 
 
-
         // restore environment
         g.setPaint(oldPaint);
         g.setStroke(oldStroke);
