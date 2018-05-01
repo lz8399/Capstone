@@ -2,6 +2,10 @@ package org.openstreetmap.josm;
 
 import jssc.SerialPort;
 import jssc.SerialPortException;
+import org.openstreetmap.josm.gui.MainApplication;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,11 +20,23 @@ public class SimulatedSerialPort extends SerialPort {
     public SimulatedSerialPort(String serialPort) {
         super(serialPort);
 
-        for (File file : new File("C:\\Users\\Kevin\\git\\Capstone\\simulated_serialport_data").listFiles())
-        {
-            try {
-                imageBytes.add(Files.readAllBytes(file.toPath()));
-            } catch (IOException ioex) {}
+        //Create a file chooser
+        final JFileChooser fc = new JFileChooser();
+
+        fc.setCurrentDirectory(new File(System.getProperty("user.home")));
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+        //In response to a button click:
+        int result = fc.showOpenDialog(MainApplication.parent);
+
+        if(result == JFileChooser.APPROVE_OPTION) {
+            File[] files = fc.getSelectedFile().listFiles();
+            for (File file : files) {
+                try {
+                    imageBytes.add(Files.readAllBytes(file.toPath()));
+                } catch (IOException ioex) {
+                }
+            }
         }
 
     }
@@ -47,4 +63,21 @@ public class SimulatedSerialPort extends SerialPort {
     public boolean setParams(int baudRate, int dataBits, int stopBits, int parity) throws SerialPortException {
         return true;
     }
+
+
+//    public void actionPerformed(ActionEvent e) {
+//        //Handle open button action.
+//        if (e.getSource() == openButton) {
+//            int returnVal = fc.showOpenDialog(FileChooserDemo.this);
+//
+//            if (returnVal == JFileChooser.APPROVE_OPTION) {
+//                File file = fc.getSelectedFile();
+//                //This is where a real application would open the file.
+//                log.append("Opening: " + file.getName() + "." + newline);
+//            } else {
+//                log.append("Open command cancelled by user." + newline);
+//            }
+//        } ...
+//    }
+
 }

@@ -24,6 +24,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -32,7 +33,8 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class DisasterResponse {
 
-    private static final String save_dir = "C:\\Users\\Kevin\\git\\Capstone\\saved_image_data";
+    // e.g., C:\Users\Kevin\AppData\Local\Temp\TeamMahogany
+    private static final String save_dir = Paths.get(System.getProperty("java.io.tmpdir"), "TeamMahogany").toString();
 
     public DisasterResponse() {
 
@@ -60,7 +62,12 @@ public class DisasterResponse {
 
         // delete all other files already here
         try {
-            FileUtils.cleanDirectory(new File(save_dir));
+            File tmpDir = new File(save_dir);
+            if (tmpDir.exists()) {
+                FileUtils.cleanDirectory(new File(save_dir));
+            } else {
+                tmpDir.mkdir();
+            }
         } catch (IOException ioex) {}
 
         try {Thread.sleep(3000); } catch (Exception unused) {}
