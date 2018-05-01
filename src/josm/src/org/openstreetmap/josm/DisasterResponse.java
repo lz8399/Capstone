@@ -11,12 +11,16 @@ import org.openstreetmap.josm.actions.MergeLayerAction;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.coor.conversion.LatLonParser;
+import org.openstreetmap.josm.data.gpx.*;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.io.importexport.JpgImporter;
 import org.openstreetmap.josm.gui.layer.*;
+import org.openstreetmap.josm.gui.layer.gpx.GpxDrawHelper;
+import org.openstreetmap.josm.gui.layer.markerlayer.Marker;
+import org.openstreetmap.josm.gui.layer.markerlayer.MarkerLayer;
 import org.openstreetmap.josm.tools.Logging;
 
 import javax.imageio.*;
@@ -28,9 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
@@ -47,10 +49,10 @@ public class DisasterResponse {
         zoomToTufts();
 
         // pretend radiation info
-        //testRadiationLayer();
+        testRadiationLayer();
 
         // monitor serial port for incoming images and save them to disk
-        new Thread(DisasterResponse::monitorSerialForImages).start();
+        //new Thread(DisasterResponse::monitorSerialForImages).start();
 
     }
 
@@ -145,62 +147,24 @@ public class DisasterResponse {
     }
 
     private static void testRadiationLayer() {
-        DataSet dataSet = new DataSet();
-        double northPos = 42.4075;
-        double eastPos = 71.1190;
+        GpxData data = new GpxData();
 
-        //double northPos = 0;
-        //double eastPos = 0;
+        LatLon latlon = new LatLon(0,0);
+        LatLon latlon10 = new LatLon(1,0);
 
-//        ImageNode n1 = new ImageNode(new EastNorth(eastPos+0, northPos+0));
-//        ImageNode n2 = new ImageNode(new EastNorth(eastPos-1, northPos+1));
-//        ImageNode n3 = new ImageNode(new EastNorth(eastPos+1, northPos+1));
-//        ImageNode n4 = new ImageNode(new EastNorth(eastPos-1, northPos-1));
-//        ImageNode n5 = new ImageNode(new EastNorth(eastPos+1, northPos-1));
-//        ImageNode n6 = new ImageNode(new EastNorth(eastPos-1, northPos+0));
-//        ImageNode n7 = new ImageNode(new EastNorth(eastPos+1, northPos+0));
+        RadiationMarker radMarker = new RadiationMarker(10, latlon);
+        RadiationMarker radMarker2 = new RadiationMarker(100, latlon10);
+        data.addRoute(radMarker2);
+        data.addRoute(radMarker);
 
-        Node n1 = new Node(new EastNorth(eastPos+0, northPos+0));
-        Node n2 = new Node(new EastNorth(eastPos-1, northPos+1));
-        Node n3 = new Node(new EastNorth(eastPos+1, northPos+1));
-        Node n4 = new Node(new EastNorth(eastPos-1, northPos-1));
-        Node n5 = new Node(new EastNorth(eastPos+1, northPos-1));
-        Node n6 = new Node(new EastNorth(eastPos-1, northPos+0));
-        Node n7 = new Node(new EastNorth(eastPos+1, northPos+0));
+        GpxLayer gpx = new GpxLayer(data);
+        gpx.setName("Radiation Layer");
+        MainApplication.getLayerManager().addLayer(gpx);
 
-        dataSet.addPrimitive(n1);
-        dataSet.addPrimitive(n2);
-        dataSet.addPrimitive(n3);
-        dataSet.addPrimitive(n4);
-        dataSet.addPrimitive(n5);
-        dataSet.addPrimitive(n6);
-        dataSet.addPrimitive(n7);
+    }
 
-        //ImageryLayer layer2 = new ImageryLayer();
-        //TMSLayer layer2 = new TMSLayer(new ImageryInfo("Radiation Layer", "http://www.url.com/"));
-        //layer2.getDisplaySettings().setOffsetBookmark(
-        //       new OffsetBookmark(Main.getProjection().toCode(), layer2.getInfo().getName(), "", 12, 34));
-
-        // Might need to overload Node to create custom Node class to display our UI
-
-        // Types of Layers to investigate:
-//        public static ImageryLayer create(ImageryInfo info) {
-//            switch(info.getImageryType()) {
-//                case WMS:
-//                    return new WMSLayer(info);
-//                case WMTS:
-//                    return new WMTSLayer(info);
-//                case TMS:
-//                case BING:
-//                case SCANEX:
-//                    return new TMSLayer(info);
-//                default:
-//                    throw new AssertionError(tr("Unsupported imagery type: {0}", info.getImageryType()));
-//            }
-//        }
-
-        OsmDataLayer layer = new OsmDataLayer(dataSet, "Radiation Layer", null);
-        MainApplication.getLayerManager().addLayer(layer);
+    private static ImmutableGpxTrack waypointGpxTrack(WayPoint... wps) {
+        return new ImmutableGpxTrack(Collections.singleton(Arrays.asList(wps)), Collections.emptyMap());
     }
 
     private static TiffImageMetadata readExifMetadata(byte[] jpegData) throws ImageReadException, IOException {

@@ -4,18 +4,7 @@ package org.openstreetmap.josm.gui.layer.gpx;
 import static org.openstreetmap.josm.tools.I18n.marktr;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
-import java.awt.AlphaComposite;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Composite;
-import java.awt.Graphics2D;
-import java.awt.LinearGradientPaint;
-import java.awt.MultipleGradientPaint;
-import java.awt.Paint;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.Stroke;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.awt.image.Raster;
@@ -32,6 +21,8 @@ import java.util.Random;
 
 import javax.swing.ImageIcon;
 
+import org.openstreetmap.josm.RadiationMarker;
+import org.openstreetmap.josm.RadiationWayPoint;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.PreferencesUtils;
 import org.openstreetmap.josm.data.SystemOfMeasurement;
@@ -329,6 +320,9 @@ public class GpxDrawHelper implements SoMChangeListener, MapViewPaintable.LayerP
 
         // get heatmap parameters
         heatMapEnabled = PreferencesUtils.getBoolean(Config.getPref(), "draw.rawgps.heatmap.enabled", spec, false);
+
+        // TODO: AT SOME POINT WE WANT THIS ALWAYS ENABLED!! For now, see the actual waypoints so we can make points
+
         heatMapDrawExtraLine = PreferencesUtils.getBoolean(Config.getPref(), "draw.rawgps.heatmap.line-extra", spec, false);
         heatMapDrawColorTableIdx = PreferencesUtils.getInteger(Config.getPref(), "draw.rawgps.heatmap.colormap", spec, 0);
         heatMapDrawPointMode = PreferencesUtils.getBoolean(Config.getPref(), "draw.rawgps.heatmap.use-points", spec, false);
@@ -469,6 +463,24 @@ public class GpxDrawHelper implements SoMChangeListener, MapViewPaintable.LayerP
         // normal overlays
         drawArrows(g, mv, visibleSegments);
         drawPoints(g, mv, visibleSegments);
+
+        // Added to display CPS on Radiation Markers!
+        for (WayPoint trkPnt : visibleSegments) {
+            LatLon c = trkPnt.getCoor();
+            if (Double.isNaN(c.lat()) || Double.isNaN(c.lon())) {
+                continue;
+            }
+            if (trkPnt instanceof RadiationWayPoint) {
+                Point screen = mv.getPoint(trkPnt);
+
+                Font orig = g.getFont();
+                g.setFont(new Font("TimesRoman", Font.PLAIN, 30));
+                g.drawString(((RadiationWayPoint)trkPnt).getCPS(), screen.x,screen.y);
+                g.setFont(orig);
+            }
+        } // end for trkpnt
+
+
 
         // restore environment
         g.setPaint(oldPaint);

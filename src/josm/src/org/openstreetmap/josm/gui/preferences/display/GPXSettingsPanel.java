@@ -410,6 +410,7 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
                 "draw.rawgps.max-line-length", layerName, 200)));
         drawLineWidth.setText(Integer.toString(PreferencesUtils.getInteger(Config.getPref(),
                 "draw.rawgps.linewidth", layerName, 0)));
+        drawLineWidth.setText("10"); // We always want 10px
         drawLineWithAlpha.setSelected(PreferencesUtils.getBoolean(Config.getPref(),
                 "draw.rawgps.lines.alpha-blend", layerName, false));
         forceRawGpsLines.setSelected(PreferencesUtils.getBoolean(Config.getPref(),
@@ -424,6 +425,7 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
                 "draw.rawgps.hdopcircle", layerName, false));
         largeGpsPoints.setSelected(PreferencesUtils.getBoolean(Config.getPref(),
                 "draw.rawgps.large", layerName, false));
+        largeGpsPoints.setSelected(true); // Always want to show
         useGpsAntialiasing.setSelected(Config.getPref().getBoolean("mappaint.gpx.use-antialiasing", false));
 
         drawRawGpsLinesActionListener.actionPerformed(null);
@@ -501,7 +503,11 @@ public class GPXSettingsPanel extends JPanel implements ValidationListener {
 
         Config.getPref().putBoolean("draw.rawgps.hdopcircle"+layerNameDot, hdopCircleGpsPoints.isSelected());
         Config.getPref().putBoolean("draw.rawgps.large"+layerNameDot, largeGpsPoints.isSelected());
+        Config.getPref().putBoolean("draw.rawgps.large"+layerNameDot, true); // We always want this enabled
+
         Config.getPref().put("draw.rawgps.linewidth"+layerNameDot, drawLineWidth.getText());
+        Config.getPref().put("draw.rawgps.linewidth"+layerNameDot, "10"); // We always want 10px
+
         Config.getPref().putBoolean("draw.rawgps.lines.alpha-blend"+layerNameDot, drawLineWithAlpha.isSelected());
 
         Config.getPref().putBoolean("mappaint.gpx.use-antialiasing", useGpsAntialiasing.isSelected());
