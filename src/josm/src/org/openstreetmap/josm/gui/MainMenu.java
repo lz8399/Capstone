@@ -25,86 +25,8 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import org.openstreetmap.josm.Main;
-import org.openstreetmap.josm.actions.AboutAction;
-import org.openstreetmap.josm.actions.AddNodeAction;
-import org.openstreetmap.josm.actions.AlignInCircleAction;
-import org.openstreetmap.josm.actions.AlignInLineAction;
-import org.openstreetmap.josm.actions.AutoScaleAction;
-import org.openstreetmap.josm.actions.ChangesetManagerToggleAction;
-import org.openstreetmap.josm.actions.CloseChangesetAction;
-import org.openstreetmap.josm.actions.CombineWayAction;
-import org.openstreetmap.josm.actions.CopyAction;
-import org.openstreetmap.josm.actions.CopyCoordinatesAction;
-import org.openstreetmap.josm.actions.CreateCircleAction;
-import org.openstreetmap.josm.actions.CreateMultipolygonAction;
-import org.openstreetmap.josm.actions.DeleteAction;
-import org.openstreetmap.josm.actions.DeleteLayerAction;
-import org.openstreetmap.josm.actions.DialogsToggleAction;
-import org.openstreetmap.josm.actions.DistributeAction;
-import org.openstreetmap.josm.actions.DownloadAction;
-import org.openstreetmap.josm.actions.DownloadNotesInViewAction;
-import org.openstreetmap.josm.actions.DownloadOsmInViewAction;
-import org.openstreetmap.josm.actions.DownloadPrimitiveAction;
-import org.openstreetmap.josm.actions.DownloadReferrersAction;
-import org.openstreetmap.josm.actions.DuplicateAction;
-import org.openstreetmap.josm.actions.ExitAction;
-import org.openstreetmap.josm.actions.ExpertToggleAction;
-import org.openstreetmap.josm.actions.FollowLineAction;
-import org.openstreetmap.josm.actions.FullscreenToggleAction;
-import org.openstreetmap.josm.actions.GpxExportAction;
-import org.openstreetmap.josm.actions.HelpAction;
-import org.openstreetmap.josm.actions.HistoryInfoAction;
-import org.openstreetmap.josm.actions.HistoryInfoWebAction;
-import org.openstreetmap.josm.actions.InfoAction;
-import org.openstreetmap.josm.actions.InfoWebAction;
-import org.openstreetmap.josm.actions.JoinAreasAction;
-import org.openstreetmap.josm.actions.JoinNodeWayAction;
-import org.openstreetmap.josm.actions.JosmAction;
-import org.openstreetmap.josm.actions.JumpToAction;
-import org.openstreetmap.josm.actions.MergeLayerAction;
-import org.openstreetmap.josm.actions.MergeNodesAction;
-import org.openstreetmap.josm.actions.MergeSelectionAction;
-import org.openstreetmap.josm.actions.MirrorAction;
-import org.openstreetmap.josm.actions.MoveAction;
-import org.openstreetmap.josm.actions.MoveNodeAction;
-import org.openstreetmap.josm.actions.NewAction;
-import org.openstreetmap.josm.actions.OpenFileAction;
-import org.openstreetmap.josm.actions.OpenLocationAction;
-import org.openstreetmap.josm.actions.OrthogonalizeAction;
+import org.openstreetmap.josm.actions.*;
 import org.openstreetmap.josm.actions.OrthogonalizeAction.Undo;
-import org.openstreetmap.josm.actions.PasteAction;
-import org.openstreetmap.josm.actions.PasteAtSourcePositionAction;
-import org.openstreetmap.josm.actions.PasteTagsAction;
-import org.openstreetmap.josm.actions.PreferenceToggleAction;
-import org.openstreetmap.josm.actions.PreferencesAction;
-import org.openstreetmap.josm.actions.PurgeAction;
-import org.openstreetmap.josm.actions.RedoAction;
-import org.openstreetmap.josm.actions.ReportBugAction;
-import org.openstreetmap.josm.actions.RestartAction;
-import org.openstreetmap.josm.actions.ReverseWayAction;
-import org.openstreetmap.josm.actions.SaveAction;
-import org.openstreetmap.josm.actions.SaveAsAction;
-import org.openstreetmap.josm.actions.SearchNotesDownloadAction;
-import org.openstreetmap.josm.actions.SelectAllAction;
-import org.openstreetmap.josm.actions.SelectNonBranchingWaySequencesAction;
-import org.openstreetmap.josm.actions.SessionSaveAsAction;
-import org.openstreetmap.josm.actions.ShowStatusReportAction;
-import org.openstreetmap.josm.actions.SimplifyWayAction;
-import org.openstreetmap.josm.actions.SplitWayAction;
-import org.openstreetmap.josm.actions.TaggingPresetSearchAction;
-import org.openstreetmap.josm.actions.UnGlueAction;
-import org.openstreetmap.josm.actions.UnJoinNodeWayAction;
-import org.openstreetmap.josm.actions.UndoAction;
-import org.openstreetmap.josm.actions.UnselectAllAction;
-import org.openstreetmap.josm.actions.UpdateDataAction;
-import org.openstreetmap.josm.actions.UpdateModifiedAction;
-import org.openstreetmap.josm.actions.UpdateSelectionAction;
-import org.openstreetmap.josm.actions.UploadAction;
-import org.openstreetmap.josm.actions.UploadSelectionAction;
-import org.openstreetmap.josm.actions.ViewportFollowToggleAction;
-import org.openstreetmap.josm.actions.WireframeToggleAction;
-import org.openstreetmap.josm.actions.ZoomInAction;
-import org.openstreetmap.josm.actions.ZoomOutAction;
 import org.openstreetmap.josm.actions.audio.AudioBackAction;
 import org.openstreetmap.josm.actions.audio.AudioFasterAction;
 import org.openstreetmap.josm.actions.audio.AudioFwdAction;
@@ -275,6 +197,10 @@ public class MainMenu extends JMenuBar {
     public final CreateMultipolygonAction createMultipolygon = new CreateMultipolygonAction(false);
     /** Tools / Update multipolygon */
     public final CreateMultipolygonAction updateMultipolygon = new CreateMultipolygonAction(true);
+    /** Tools / Run Team Mahogany Monitoring Software */
+    public final DisasterResponseAction teamMahogany = new DisasterResponseAction();
+    /** Tools / Run Team Mahogany Monitoring Software Simulation */
+    public final DisasterResponseSimAction teamMahoganySim = new DisasterResponseSimAction();
 
     /* Selection menu */
     /** Selection / Select All */
@@ -783,6 +709,10 @@ public class MainMenu extends JMenuBar {
         add(toolsMenu, addNode, true);
         add(toolsMenu, moveNode, true);
         add(toolsMenu, createCircle);
+
+        add(toolsMenu, teamMahogany);
+        add(toolsMenu, teamMahoganySim);
+
         toolsMenu.addSeparator();
         add(toolsMenu, mergeNodes);
         add(toolsMenu, joinNodeWay);

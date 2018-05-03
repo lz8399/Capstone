@@ -35,6 +35,7 @@ public class DisasterResponse {
 
     // e.g., C:\Users\Kevin\AppData\Local\Temp\TeamMahogany
     private static final String save_dir = Paths.get(System.getProperty("java.io.tmpdir"), "TeamMahogany").toString();
+    private static SerialPort serialPort = null;
 
     public DisasterResponse() {
 
@@ -46,6 +47,22 @@ public class DisasterResponse {
 
         // pretend radiation info
         //testRadiationLayer();
+
+        // monitor serial port for incoming images and save them to disk
+        //new Thread(DisasterResponse::monitorSerialForImages).start();
+    }
+
+    public static void simulatedDisasterResponse() {
+
+        serialPort = new SimulatedSerialPort("COM3");
+
+        // monitor serial port for incoming images and save them to disk
+        new Thread(DisasterResponse::monitorSerialForImages).start();
+    }
+
+    public static void disasterResponse() {
+
+        serialPort = new SerialPort("COM3"); //This is hard coded for my machine..
 
         // monitor serial port for incoming images and save them to disk
         new Thread(DisasterResponse::monitorSerialForImages).start();
@@ -73,7 +90,6 @@ public class DisasterResponse {
         try {Thread.sleep(3000); } catch (Exception unused) {}
         Logging.info("Attempting to monitor serial port...");
 
-        SimulatedSerialPort serialPort = new SimulatedSerialPort("COM3");
         try {
             serialPort.openPort();//Open serial port
             serialPort.setParams(115200, 8, 1, 0);//Set params.
