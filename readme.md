@@ -10,6 +10,8 @@ Our project is a prototype for a black-box attachment to a drone/other unmanned 
 
 [/src](https://github.com/kdorosh/Capstone/tree/master/src) contains the git repos both researched and used for the project.
 
+Download sample .osm maps [here](http://download.geofabrik.de/). Download the bz2-compressed (.osm.bz2) version. If you'll have internet connection running the GUI, this step is unnecessary.
+
 ## The Hardware and Firmware
 
 A GoPro HERO3+ Black Edition is used to record images and save them to a micro SD card. 
@@ -52,15 +54,17 @@ WebODM or a similar tool would have been ideal to take overlapping images and st
   * [WebODM](https://github.com/kdorosh/Capstone/tree/master/src/WebODM) - A web-based tool for post-flight processing of drone imagery, built on top of [OpenDroneMap](https://github.com/OpenDroneMap/OpenDroneMap). The secondary plan was to leverage the image-stitching and clean UI base of WebODM for our uses, packagaing the web tool into a desktop application into a native desktop app using [Electron](https://github.com/electron/electron). This complex project suffered recent undocumented changes becoming more trouble than it was worth --> abandoned code pivoted to more standard desktop development using [josm](https://github.com/openstreetmap/josm) early this semester.
   * [iD](https://github.com/kdorosh/Capstone/tree/master/src/iD) - A web-based branch of the OpenStreetMap project briefly considered between WebODM and josm.
 
-### Building
+## Build and Run
 
 **Build the Team Mahogany Arduino firmware**
 
 Download the newest version of the [Arduino IDE](https://www.arduino.cc/en/Main/Software).
 
-Flash the transmitter code at `src/Project/tx` to the transmitter Arduino Pro.
+Verify and flash the transmitter code at `src/Project/tx` to the transmitter Arduino Pro.
 
-Flash the receiver code at `src/Project/rx` to the receiver Arduino Pro.
+Verify and flash the receiver code at `src/Project/rx` to the receiver Arduino Pro.
+
+The Team Mahogany code uses Radiohead's library, thus to compile you must clone the [RadioHead repo](https://github.com/PaulStoffregen/RadioHead/tree/3d02f09670eb3880067e989998309dcfa2aa7a68) and put it in your `Documents/Arduino/libraries` (Linux/OS X) or `My Documents/Arduino/libraries` (Windows) folder.
 
 **Build the Team Mahogany GUI**
 
@@ -79,11 +83,25 @@ $ ant clean
 
 [Set up an IntelliJ environment](https://josm.openstreetmap.de/wiki/DevelopersGuide/CompilingUsingIntelliJ) to change the code.
 
+**Run the Team Mahogany GUI**
+
+Run the generated `src\josm\dist\josm-custom.jar`. Click `File -> Open` to open downloaded .osm maps for offline function (slow).
+
+Click `Tools -> Run Disaster Response Simulation` to open run the simulated version of the GUI. Simulated data comes from your provided directory (choose `simulated_serialport_data` in repo root).
+
+Click `Tools -> Run Disaster Response Software` to run the full version.
+
 ## Built With
 
 * [RadioHead](https://github.com/PaulStoffregen/RadioHead/tree/3d02f09670eb3880067e989998309dcfa2aa7a68) - Open-source RF69 radio arduino firmware
 * [Adafruit_GPS](https://github.com/adafruit/Adafruit_GPS/tree/77fe3484374837cecf2dd8387f3a62b1d5c832f9) - Open-source GPS chip firmware
 * [JOSM](https://github.com/openstreetmap/josm) - Open-source java offshoot of OpenStreetMap project
+
+## Future Work
+
+In the future we would like to implement image stitching into the GUI, akin to node-OpenDroneMap's functionality. Additionally, a topographic-style map layer for radiation data would be interesting, if we had enough data.
+
+Further, we would use a better transmitter for improved range and transmission speed. We would complete the thermal camera circuitry and work on sizing down the prototyped hardware into a smaller form-factor.
 
 ## Authors
 
