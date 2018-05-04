@@ -1,8 +1,12 @@
 # Team Mahogany - Tufts University
 
-We help first-responders best evaluate terrain risks in post-disaster scenarios by iterating on current drone software/hardware and adding support for harmful radiation detection.
+## Who
 
-Our project is a prototype for a black-box attachment to a drone/other unmanned vehicle that reports standard image, thermal, and radiation data over radio to a radio receiver and displays the reported infomation in an intuitive user interface, in real time -- no internet required.
+We help first-responders best evaluate terrain risks in post-disaster scenarios by iterating on current drone software/hardware and adding support for harmful radiation detection. Similar tech exists in a military setting, but we are developing an open-source software/hardware prototype for use by public organizations such as [Help.NGO - Global DIRT](http://globaldirt.org/).
+
+## What
+
+Our project is a prototype for a black-box attachment for a drone/other unmanned vehicle that reports standard image, thermal, and radiation data over radio to a radio receiver and displays the reported infomation in an intuitive user interface, in real time -- no internet required.
 
 ## Getting Started
 
@@ -10,7 +14,7 @@ Our project is a prototype for a black-box attachment to a drone/other unmanned 
 
 [/src](https://github.com/kdorosh/Capstone/tree/master/src) contains the git repos both researched and used for the project.
 
-Download sample .osm maps [here](http://download.geofabrik.de/). Download the bz2-compressed (.osm.bz2) version. If you'll have internet connection running the GUI, this step is unnecessary.
+Download sample .osm maps [here](http://download.geofabrik.de/). Download the bz2-compressed (.osm.bz2) version. If you'll have an internet connection running the GUI, this step is unnecessary.
 
 ## The Hardware and Firmware
 
@@ -64,7 +68,11 @@ Verify and flash the transmitter code at `src/Project/tx` to the transmitter Ard
 
 Verify and flash the receiver code at `src/Project/rx` to the receiver Arduino Pro.
 
-The Team Mahogany code uses Radiohead's library, thus to compile you must clone the [RadioHead repo](https://github.com/PaulStoffregen/RadioHead/tree/3d02f09670eb3880067e989998309dcfa2aa7a68) and put it in your `Documents/Arduino/libraries` (Linux/OS X) or `My Documents/Arduino/libraries` (Windows) folder.
+The Team Mahogany code uses Radiohead's and Adafruit_GPS's libraries. To compile our code you must clone the [RadioHead repo](https://github.com/PaulStoffregen/RadioHead/tree/3d02f09670eb3880067e989998309dcfa2aa7a68) and the [Adafruit_GPS repo](https://github.com/adafruit/Adafruit_GPS/tree/77fe3484374837cecf2dd8387f3a62b1d5c832f9) to your `Documents/Arduino/libraries` (Linux/OS X) or `My Documents/Arduino/libraries` (Windows) folder.
+
+**Run the Team Mahogany Arduino firmware**
+
+Once you have verified and compiled the code in the Arduino IDE, it automatically flashes to the chip and runs. The lights on the Arduino Mega's should light up and flash to signal that the code is running.
 
 **Build the Team Mahogany GUI**
 
@@ -85,7 +93,7 @@ $ ant clean
 
 **Run the Team Mahogany GUI**
 
-Run the generated `src\josm\dist\josm-custom.jar`. Click `File -> Open` to open downloaded .osm maps for offline function (slow).
+Run the generated `src\josm\dist\josm-custom.jar`. Click `File -> Open` to open downloaded .osm maps, if neeeded, for offline function (slow).
 
 Click `Tools -> Run Disaster Response Simulation` to open run the simulated version of the GUI. Simulated data comes from your provided directory (choose `simulated_serialport_data` in repo root).
 
@@ -109,9 +117,9 @@ This project would have been impossible without the tireless work of developers 
 
 Team Mahogany:
 * **Kevin Dorosh**    - *CS: Spearheaded git repo & GUI*
-* **Richard Preston** - *Comp E: Worked at all levels of abstraction*
-* **Ryan Stocking**   - *EE: Killed it on the hardware circuitry*
-* **Elyse Cooper**    - *EE: Killed it on the hardware circuitry*
+* **Richard Preston** - *Comp E: Focused on firmware and the circuits*
+* **Ryan Stocking**   - *EE: Killed it on the hardware design and implementation*
+* **Elyse Cooper**    - *EE: Nailed the hardware implementation and team coordination*
 
 ## License
 
