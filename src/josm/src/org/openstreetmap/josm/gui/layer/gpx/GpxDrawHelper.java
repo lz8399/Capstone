@@ -21,7 +21,6 @@ import java.util.Random;
 
 import javax.swing.ImageIcon;
 
-import org.openstreetmap.josm.RadiationMarker;
 import org.openstreetmap.josm.RadiationWayPoint;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.PreferencesUtils;
@@ -474,9 +473,23 @@ public class GpxDrawHelper implements SoMChangeListener, MapViewPaintable.LayerP
                 Point screen = mv.getPoint(trkPnt);
 
                 Font orig = g.getFont();
-                g.setFont(new Font("TimesRoman", Font.PLAIN, 30));
-                g.drawString(((RadiationWayPoint)trkPnt).getCPS(), screen.x,screen.y);
+                Color origFontColor = g.getColor();
+                g.setFont(new Font("TimesRoman", Font.BOLD, 30));
+
+                g.setColor(Color.BLACK);
+                int xOffset=2, yOffset=2;
+
+                g.drawString(((RadiationWayPoint)trkPnt).getCPS(), screen.x-xOffset, screen.y+yOffset);
+                g.drawString(((RadiationWayPoint)trkPnt).getCPS(), screen.x-xOffset, screen.y-yOffset);
+                g.drawString(((RadiationWayPoint)trkPnt).getCPS(), screen.x+xOffset, screen.y+yOffset);
+                g.drawString(((RadiationWayPoint)trkPnt).getCPS(), screen.x+xOffset, screen.y-yOffset);
+
+
+                g.setColor(origFontColor);
+                g.drawString(((RadiationWayPoint)trkPnt).getCPS(), screen.x, screen.y);
+
                 g.setFont(orig);
+
             }
         } // end for trkpnt
 
