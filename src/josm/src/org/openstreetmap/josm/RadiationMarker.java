@@ -9,13 +9,13 @@ import java.util.Optional;
 
 public class RadiationMarker extends GpxRoute {
 
-     RadiationMarker(int cps, LatLon latlon) {
+     RadiationMarker(double cps, LatLon latlon) {
         super();
 
         ArrayList<WayPoint> routePoints = new ArrayList<>();
         double latOffset = 0.000001;
         double lonOffset = 0.000001;
-        Optional<Integer> cpsOpt = Optional.of(cps);
+        Optional<Double> cpsOpt = Optional.of(cps);
         for (int i=0; i < cps; i++) {
             routePoints.add(new RadiationWayPoint(Optional.empty(), new LatLon(latlon.lat(),latlon.lon())));
             routePoints.add(new RadiationWayPoint(Optional.empty(), new LatLon(latlon.lat(),latlon.lon()+lonOffset)));

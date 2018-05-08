@@ -44,12 +44,6 @@ public class DisasterResponse {
     public static void Initialize() {
         // Zoom to Tufts University above Halligan and Tisch Gym
         zoomToTufts();
-
-        // pretend radiation info
-        //testRadiationLayer();
-
-        // monitor serial port for incoming images and save them to disk
-        //new Thread(DisasterResponse::monitorSerialForImages).start();
     }
 
     public static void simulatedDisasterResponse() {
@@ -71,10 +65,11 @@ public class DisasterResponse {
     private static void monitorSerialForImages()
     {
         // Prep Radiation Layer
-        int cpsCounter = 2;
+        Double cpsCounter = 0.0;
         GpxData data = new GpxData();
         GpxLayer gpx = new GpxLayer(data);
         gpx.setName("Radiation Layer");
+        gpx.setVisible(false);
         MainApplication.getLayerManager().addLayer(gpx);
 
         // delete all other files already here
@@ -125,7 +120,8 @@ public class DisasterResponse {
                         ProcessImage(outputFile);
 
                         // Add radiation layer info as well
-                        RadiationMarker radMarker = new RadiationMarker(cpsCounter++, coords);
+                        cpsCounter+=0.35;
+                        RadiationMarker radMarker = new RadiationMarker(cpsCounter, coords);
                         data.addRoute(radMarker);
 
                     } catch (IOException ex) {
@@ -171,27 +167,6 @@ public class DisasterResponse {
                 merge.mergeOntoTargetLayer(targetLayer, geoTaggedLayer); //source and target
             }
         }
-    }
-
-    private static void testRadiationLayer() {
-        GpxData data = new GpxData();
-
-        LatLon latlon = new LatLon(0,0);
-        LatLon latlon10 = new LatLon(1,0);
-
-        RadiationMarker radMarker = new RadiationMarker(10, latlon);
-        RadiationMarker radMarker2 = new RadiationMarker(100, latlon10);
-        data.addRoute(radMarker2);
-        data.addRoute(radMarker);
-
-        GpxLayer gpx = new GpxLayer(data);
-        gpx.setName("Radiation Layer");
-        MainApplication.getLayerManager().addLayer(gpx);
-
-    }
-
-    private static ImmutableGpxTrack waypointGpxTrack(WayPoint... wps) {
-        return new ImmutableGpxTrack(Collections.singleton(Arrays.asList(wps)), Collections.emptyMap());
     }
 
     private static TiffImageMetadata readExifMetadata(byte[] jpegData) throws ImageReadException, IOException {

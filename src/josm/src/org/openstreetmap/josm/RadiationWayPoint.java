@@ -7,14 +7,27 @@ import java.util.Optional;
 
 public class RadiationWayPoint extends WayPoint {
 
-    private final Optional<Integer> countsPerSec;
+    private final Optional<Double> countsPerSec;
 
-    RadiationWayPoint(Optional<Integer> cps, LatLon latlon) {
+    RadiationWayPoint(Optional<Double> cps, LatLon latlon) {
         super(latlon);
-        countsPerSec = cps;
+
+        if (cps.isPresent()) {
+            double cpsTemp = cps.get();
+            cpsTemp = (double)Math.round(cpsTemp * 1000d) / 1000d; // round to 3 digits
+            countsPerSec = Optional.of(cpsTemp);
+        }
+        else {
+            countsPerSec = Optional.empty();
+        }
     }
 
     public String getCPS() {
         return countsPerSec.isPresent() ? "CPS: "+countsPerSec.get() : "";
     }
+
+    public Double getCPSDouble() {
+        return countsPerSec.isPresent() ? countsPerSec.get() : 0.0;
+    }
+
 }

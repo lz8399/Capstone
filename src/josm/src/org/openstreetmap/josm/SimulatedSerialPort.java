@@ -45,7 +45,7 @@ public class SimulatedSerialPort extends SerialPort {
     public byte[] readBytes() throws SerialPortException {
         if (currIndex < imageBytes.size()) {
             try {
-                Thread.sleep(3000);
+                Thread.sleep(1000);
             } catch (InterruptedException iex) {}
             return imageBytes.get(currIndex++);
         }
@@ -63,21 +63,4 @@ public class SimulatedSerialPort extends SerialPort {
     public boolean setParams(int baudRate, int dataBits, int stopBits, int parity) throws SerialPortException {
         return true;
     }
-
-
-//    public void actionPerformed(ActionEvent e) {
-//        //Handle open button action.
-//        if (e.getSource() == openButton) {
-//            int returnVal = fc.showOpenDialog(FileChooserDemo.this);
-//
-//            if (returnVal == JFileChooser.APPROVE_OPTION) {
-//                File file = fc.getSelectedFile();
-//                //This is where a real application would open the file.
-//                log.append("Opening: " + file.getName() + "." + newline);
-//            } else {
-//                log.append("Open command cancelled by user." + newline);
-//            }
-//        } ...
-//    }
-
 }

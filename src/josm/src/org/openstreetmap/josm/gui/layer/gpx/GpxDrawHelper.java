@@ -33,6 +33,7 @@ import org.openstreetmap.josm.data.gpx.GpxData.GpxDataChangeEvent;
 import org.openstreetmap.josm.data.gpx.GpxData.GpxDataChangeListener;
 import org.openstreetmap.josm.data.gpx.WayPoint;
 import org.openstreetmap.josm.data.preferences.NamedColorProperty;
+import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.MapViewState;
 import org.openstreetmap.josm.gui.layer.GpxLayer;
@@ -476,6 +477,23 @@ public class GpxDrawHelper implements SoMChangeListener, MapViewPaintable.LayerP
                 Color origFontColor = g.getColor();
                 g.setFont(new Font("TimesRoman", Font.BOLD, 30));
 
+                // topographic map
+                int scaleFactor = 100;
+                for(double i=0.0; i<=((RadiationWayPoint) trkPnt).getCPSDouble(); i+=0.35) {
+
+                    // 100 CPM is considered dangerous
+                    if (((RadiationWayPoint) trkPnt).getCPSDouble() >= 100.0/60.0)
+                    g.setColor(Color.RED);
+                    else if (((RadiationWayPoint) trkPnt).getCPSDouble() >= 0.40)
+                        g.setColor(Color.YELLOW);
+                    else
+                        g.setColor(Color.GREEN);
+
+                    g.drawOval((int)(screen.x - i*scaleFactor/2), (int)(screen.y - i*scaleFactor/2),
+                            (int)(i*scaleFactor), (int)(i*scaleFactor));
+
+                }
+
                 g.setColor(Color.BLACK);
                 int xOffset=2, yOffset=2;
 
@@ -484,10 +502,16 @@ public class GpxDrawHelper implements SoMChangeListener, MapViewPaintable.LayerP
                 g.drawString(((RadiationWayPoint)trkPnt).getCPS(), screen.x+xOffset, screen.y+yOffset);
                 g.drawString(((RadiationWayPoint)trkPnt).getCPS(), screen.x+xOffset, screen.y-yOffset);
 
-
-                g.setColor(origFontColor);
+                // 100 CPM is considered dangerous
+                if (((RadiationWayPoint) trkPnt).getCPSDouble() >= 100.0/60.0)
+                    g.setColor(Color.RED);
+                else if (((RadiationWayPoint) trkPnt).getCPSDouble() >= 0.40)
+                    g.setColor(Color.YELLOW);
+                else
+                    g.setColor(Color.GREEN);
                 g.drawString(((RadiationWayPoint)trkPnt).getCPS(), screen.x, screen.y);
 
+                g.setColor(origFontColor);
                 g.setFont(orig);
 
             }
